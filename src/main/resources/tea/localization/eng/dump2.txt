@@ -1,0 +1,63 @@
+ public void update()
+  {
+    if ((!AbstractDungeon.isScreenUp) && (InputHelper.pressedEscape) && (AbstractDungeon.overlayMenu.cancelButton.current_x == CancelButton.HIDE_X)) {
+      AbstractDungeon.settingsScreen.open();
+    }
+    if (Settings.isDebug)
+    {
+      if (InputHelper.justClickedRight)
+      {
+        AbstractDungeon.player.obtainPotion(AbstractDungeon.returnRandomPotion());
+        AbstractDungeon.player.obtainPotion(new SmokeBomb());
+        AbstractDungeon.scene.randomizeScene();
+      }
+      if (Gdx.input.isKeyJustPressed(49)) {
+        AbstractDungeon.player.increaseMaxOrbSlots(1, true);
+      }
+      if (DevInputActionSet.gainGold.isJustPressed()) {
+        AbstractDungeon.player.gainGold(100);
+      }
+    }
+    switch (this.phase)
+    {
+    case EVENT: 
+      this.event.updateDialog();
+      break;
+    case COMBAT: 
+      this.monsters.update();
+      if (waitTimer > 0.0F)
+      {
+        if ((AbstractDungeon.actionManager.currentAction != null) || 
+          (!AbstractDungeon.actionManager.isEmpty())) {
+          AbstractDungeon.actionManager.update();
+        } else {
+          waitTimer -= Gdx.graphics.getDeltaTime();
+        }
+        if (waitTimer <= 0.0F)
+        {
+          AbstractDungeon.actionManager.turnHasEnded = true;
+          if (!AbstractDungeon.isScreenUp) {
+            AbstractDungeon.topLevelEffects.add(new BattleStartEffect(false));
+          }
+          AbstractDungeon.actionManager.addToBottom(new GainEnergyAndEnableControlsAction(AbstractDungeon.player.energy.energyMaster));
+          
+          AbstractDungeon.player.applyStartOfCombatPreDrawLogic();
+          AbstractDungeon.actionManager.addToBottom(new DrawCardAction(AbstractDungeon.player, AbstractDungeon.player.gameHandSize));
+          
+          AbstractDungeon.actionManager.addToBottom(new EnableEndTurnButtonAction());
+          AbstractDungeon.overlayMenu.showCombatPanels();
+          AbstractDungeon.player.applyStartOfCombatLogic();
+          if (ModHelper.isModEnabled("Careless")) {
+            Careless.modAction();
+          }
+          if (ModHelper.isModEnabled("ControlledChaos")) {
+            ControlledChaos.modAction();
+          }
+          AbstractDungeon.player.applyStartOfTurnRelics();
+          AbstractDungeon.player.applyStartOfTurnPostDrawRelics();
+          AbstractDungeon.player.applyStartOfTurnCards();
+          AbstractDungeon.player.applyStartOfTurnPowers();
+          AbstractDungeon.player.applyStartOfTurnOrbs();
+          AbstractDungeon.actionManager.useNextCombatActions();
+        }
+      }

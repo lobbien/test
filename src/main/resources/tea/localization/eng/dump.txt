@@ -1,0 +1,207 @@
+  private void getNextAction()
+  {
+    if (!this.actions.isEmpty())
+    {
+      this.currentAction = ((AbstractGameAction)this.actions.remove(0));
+      this.phase = Phase.EXECUTING_ACTIONS;
+      this.hasControl = true;
+    }
+    else if (!this.preTurnActions.isEmpty())
+    {
+      this.currentAction = ((AbstractGameAction)this.preTurnActions.remove(0));
+      this.phase = Phase.EXECUTING_ACTIONS;
+      this.hasControl = true;
+    }
+    else if (!this.cardQueue.isEmpty())
+    {
+      this.usingCard = true;
+      AbstractCard c = ((CardQueueItem)this.cardQueue.get(0)).card;
+      if (c == null)
+      {
+        callEndOfTurnActions();
+      }
+      else if (c.equals(this.lastCard))
+      {
+        logger.info("Last card! " + c.name);
+        this.lastCard = null;
+      }
+      AbstractRelic top;
+      if ((this.cardQueue.size() == 1) && (((CardQueueItem)this.cardQueue.get(0)).isEndTurnAutoPlay))
+      {
+        top = AbstractDungeon.player.getRelic("Unceasing Top");
+        if (top != null) {
+          ((UnceasingTop)top).disableUntilTurnEnds();
+        }
+      }
+      if ((((CardQueueItem)this.cardQueue.get(0)).card != null) && ((c.canUse(AbstractDungeon.player, ((CardQueueItem)this.cardQueue.get(0)).monster)) || 
+        (((CardQueueItem)this.cardQueue.get(0)).card.dontTriggerOnUseCard)))
+      {
+        AbstractDungeon.player.cardsPlayedThisTurn += 1;
+        ((CardQueueItem)this.cardQueue.get(0)).card.energyOnUse = ((CardQueueItem)this.cardQueue.get(0)).energyOnUse;
+        AbstractCard card;
+        if (!((CardQueueItem)this.cardQueue.get(0)).card.dontTriggerOnUseCard)
+        {
+          for (AbstractPower p : AbstractDungeon.player.powers) {
+            p.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          for (AbstractRelic r : AbstractDungeon.player.relics) {
+            r.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          for (AbstractBlight b : AbstractDungeon.player.blights) {
+            b.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          for (AbstractCard card : AbstractDungeon.player.hand.group) {
+            card.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          for (AbstractCard card : AbstractDungeon.player.discardPile.group) {
+            card.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          for (top = AbstractDungeon.player.drawPile.group.iterator(); top.hasNext();)
+          {
+            card = (AbstractCard)top.next();
+            card.onPlayCard(((CardQueueItem)this.cardQueue.get(0)).card, ((CardQueueItem)this.cardQueue.get(0)).monster);
+          }
+          this.cardsPlayedThisTurn.add(((CardQueueItem)this.cardQueue.get(0)).card);
+        }
+        if (this.cardsPlayedThisTurn.size() == 25) {
+          UnlockTracker.unlockAchievement("INFINITY");
+        }
+        if ((this.cardsPlayedThisTurn.size() >= 20) && (!CardCrawlGame.combo)) {
+          CardCrawlGame.combo = true;
+        }
+        int shivCount;
+        if ((((CardQueueItem)this.cardQueue.get(0)).card instanceof Shiv))
+        {
+          shivCount = 0;
+          for (AbstractCard i : this.cardsPlayedThisTurn) {
+            if ((i instanceof Shiv))
+            {
+              shivCount++;
+              if (shivCount == 10)
+              {
+                UnlockTracker.unlockAchievement("NINJA");
+                break;
+              }
+            }
+          }
+        }
+        if (((CardQueueItem)this.cardQueue.get(0)).card != null) {
+          if ((((CardQueueItem)this.cardQueue.get(0)).card.target == AbstractCard.CardTarget.ENEMY) && ((((CardQueueItem)this.cardQueue.get(0)).monster == null) || 
+            (((CardQueueItem)this.cardQueue.get(0)).monster.isDying)))
+          {
+            for (Iterator<AbstractCard> i = AbstractDungeon.player.limbo.group.iterator(); i.hasNext();)
+            {
+              AbstractCard e = (AbstractCard)i.next();
+              if (e == ((CardQueueItem)this.cardQueue.get(0)).card)
+              {
+                ((CardQueueItem)this.cardQueue.get(0)).card.fadingOut = true;
+                AbstractDungeon.effectList.add(new ExhaustCardEffect(((CardQueueItem)this.cardQueue.get(0)).card));
+                i.remove();
+              }
+            }
+            if (((CardQueueItem)this.cardQueue.get(0)).monster == null)
+            {
+              ((CardQueueItem)this.cardQueue.get(0)).card.drawScale = ((CardQueueItem)this.cardQueue.get(0)).card.targetDrawScale;
+              ((CardQueueItem)this.cardQueue.get(0)).card.angle = ((CardQueueItem)this.cardQueue.get(0)).card.targetAngle;
+              ((CardQueueItem)this.cardQueue.get(0)).card.current_x = ((CardQueueItem)this.cardQueue.get(0)).card.target_x;
+              ((CardQueueItem)this.cardQueue.get(0)).card.current_y = ((CardQueueItem)this.cardQueue.get(0)).card.target_y;
+              AbstractDungeon.effectList.add(new ExhaustCardEffect(((CardQueueItem)this.cardQueue.get(0)).card));
+            }
+          }
+          else
+          {
+            this.cardsPlayedThisCombat.add(((CardQueueItem)this.cardQueue.get(0)).card);
+            AbstractDungeon.player.useCard(
+              ((CardQueueItem)this.cardQueue.get(0)).card, 
+              ((CardQueueItem)this.cardQueue.get(0)).monster, 
+              ((CardQueueItem)this.cardQueue.get(0)).energyOnUse);
+          }
+        }
+      }
+      else
+      {
+        for (Iterator<AbstractCard> i = AbstractDungeon.player.limbo.group.iterator(); i.hasNext();)
+        {
+          AbstractCard e = (AbstractCard)i.next();
+          if (e == c)
+          {
+            c.fadingOut = true;
+            AbstractDungeon.effectList.add(new ExhaustCardEffect(c));
+            i.remove();
+          }
+        }
+        if (c != null) {
+          AbstractDungeon.effectList.add(new ThoughtBubble(AbstractDungeon.player.dialogX, AbstractDungeon.player.dialogY, 3.0F, c.cantUseMessage, true));
+        }
+      }
+      this.cardQueue.remove(0);
+    }
+    else if (!this.monsterAttacksQueued)
+    {
+      this.monsterAttacksQueued = true;
+      AbstractDungeon.getCurrRoom().monsters.queueMonsters();
+    }
+    else if (!this.monsterQueue.isEmpty())
+    {
+      AbstractMonster m = ((MonsterQueueItem)this.monsterQueue.get(0)).monster;
+      if ((!m.isDeadOrEscaped()) || (m.halfDead))
+      {
+        if (m.intent != AbstractMonster.Intent.NONE)
+        {
+          AbstractDungeon.actionManager.addToBottom(new ShowMoveNameAction(m));
+          AbstractDungeon.actionManager.addToBottom(new IntentFlashAction(m));
+        }
+        if ((!((Boolean)TipTracker.tips.get("INTENT_TIP")).booleanValue()) && (AbstractDungeon.player.currentBlock == 0) && ((m.intent == AbstractMonster.Intent.ATTACK) || (m.intent == AbstractMonster.Intent.ATTACK_DEBUFF) || (m.intent == AbstractMonster.Intent.ATTACK_BUFF) || (m.intent == AbstractMonster.Intent.ATTACK_DEFEND))) {
+          if (AbstractDungeon.floorNum <= 5) {
+            TipTracker.blockCounter += 1;
+          } else {
+            TipTracker.neverShowAgain("INTENT_TIP");
+          }
+        }
+        m.takeTurn();
+        m.applyTurnPowers();
+      }
+      this.monsterQueue.remove(0);
+      if (this.monsterQueue.isEmpty()) {
+        AbstractDungeon.actionManager.addToBottom(new WaitAction(1.5F));
+      }
+    }
+    else if ((this.turnHasEnded) && (!AbstractDungeon.getMonsters().areMonstersBasicallyDead()))
+    {
+      AbstractDungeon.getCurrRoom().monsters.applyEndOfTurnPowers();
+      AbstractDungeon.player.cardsPlayedThisTurn = 0;
+      this.orbsChanneledThisTurn.clear();
+      if (ModHelper.isModEnabled("Careless")) {
+        Careless.modAction();
+      }
+      if (ModHelper.isModEnabled("ControlledChaos"))
+      {
+        ControlledChaos.modAction();
+        AbstractDungeon.player.hand.applyPowers();
+      }
+      AbstractDungeon.player.applyStartOfTurnRelics();
+      AbstractDungeon.player.applyStartOfTurnCards();
+      AbstractDungeon.player.applyStartOfTurnPowers();
+      AbstractDungeon.player.applyStartOfTurnOrbs();
+      turn += 1;
+      this.turnHasEnded = false;
+      totalDiscardedThisTurn = 0;
+      this.cardsPlayedThisTurn.clear();
+      damageReceivedThisTurn = 0;
+      if ((!AbstractDungeon.player.hasPower("Barricade")) && (!AbstractDungeon.player.hasPower("Blur"))) {
+        if (!AbstractDungeon.player.hasRelic("Calipers")) {
+          AbstractDungeon.player.loseBlock();
+        } else {
+          AbstractDungeon.player.loseBlock(15);
+        }
+      }
+      if (!AbstractDungeon.getCurrRoom().isBattleOver)
+      {
+        AbstractDungeon.actionManager.addToBottom(new DrawCardAction(null, AbstractDungeon.player.gameHandSize, true));
+        
+        AbstractDungeon.player.applyStartOfTurnPostDrawRelics();
+        AbstractDungeon.player.applyStartOfTurnPostDrawPowers();
+        AbstractDungeon.actionManager.addToBottom(new EnableEndTurnButtonAction());
+      }
+    }
+  }

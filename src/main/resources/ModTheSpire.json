@@ -1,0 +1,10 @@
+{
+  "modid": "exordian_avenger",
+  "name": "The Exordian Avenger",
+  "author_list": ["lobbienjonsji"],
+  "description": "A inhabitant of the Exordium before the Spireblight. Not very bulky, but carries a large shield.",
+  "version": "0.1.0",
+  "mts_version": "3.6.3",
+  "dependencies": ["basemod"],
+  "update_json": "none"
+}

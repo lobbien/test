@@ -1,0 +1,131 @@
+{
+  
+  "exordian_avenger:curlup": {
+      "NAME": "Curlup",
+      "DESCRIPTION": "If the enemy intends to attack, gain !M! Plated Armor."
+  },
+   "exordian_avenger:grow": {
+      "NAME": "Grow",
+      "DESCRIPTION": "Gain 1 strength. NL Exhaust NL Recurrent 3",
+	  "UPGRADE_DESCRIPTION": "Gain 1 Strength. Draw 1 card. NL Exhaust NL Recurrent 3"
+  },
+  "exordian_avenger:countercard":{
+	"NAME": "Counter",
+	"DESCRIPTION": "Whenever an enemy gains Strength, deal damage equal to !M! times the Strength it gained to the enemy."
+  },
+  "exordian_avenger:defend": {
+      "NAME": "Endure",
+      "DESCRIPTION": "Loose !M! hp. NL Gain !B! Block. At the end of combat heal!M! hp."
+  },
+  "exordian_avenger:perfectionism": {
+      "NAME": "Perfectionism",
+      "DESCRIPTION": "Loose !M! hp. NL Avoid the next 2 times you would take Damage."
+  },
+  "exordian_avenger:silencecard": {
+      "NAME": "Silence",
+      "DESCRIPTION": "Apply !M! Silence. Apply 1 Silence to yourself."
+  },
+  "exordian_avenger:strike":
+  {
+	"NAME": "Strike",
+	"DESCRIPTION": "Deal !D! Damage."
+  },
+  "exordian_avenger:heroic":
+  {
+	"NAME": "Heroic Stance",
+	"DESCRIPTION": "Taunt NL Gain !B! Block."
+  },
+  "exordian_avenger:mania":
+  {
+	"NAME": "Mania",
+	"DESCRIPTION": "Deal !D! damage to all enemies for every point of Strength you have."
+  },
+  "exordian_avenger:silentnight":
+  {
+	"NAME": "Silent Night",
+	"DESCRIPTION": "Apply !M! Silence and Weak to all Enemies. Every Enemy looses !M! Strength."
+  },
+  "exordian_avenger:gnaw":
+  {
+	"NAME": "Gnaw",
+	"DESCRIPTION": "Deal !D! Damage. NL Heal !M! HP. NL Exhaust. NL Recurrent 1"
+  },
+  "exordian_avenger:chew":
+  {
+	"NAME": "Chew",
+	"DESCRIPTION": "Deal !D! Damage. Add a Gnaw to your hand. NL Exhaust",
+	"UPGRADE_DESCRIPTION": "Deal !D! Damage. Add an upgraded Gnaw to your hand. NL Exhaust"
+  },
+  "exordian_avenger:bubble":
+  {
+	"NAME": "Bubble",
+	"DESCRIPTION": "Gain !B! Block. NL Exhaust NL Retain"
+  },
+  "exordian_avenger:thirdhand":
+  {
+	"NAME": "Third Hand",
+	"DESCRIPTION": "Increase your maximum hand size by !M!. Do NOT Leave and rejoin combat with this power. That's cheating."
+  },
+  "exordian_avenger:scratch":
+  {
+	"NAME": "Scratch",
+	"DESCRIPTION": "Deal !D! Damage twice."
+  },
+  "exordian_avenger:outrun":
+  {
+	"NAME": "Outrun",
+	"DESCRIPTION": "Keep Block for the next !M! turns. NL Ethereal NL Exhaust NL Recurrent !M!"
+  },
+  "exordian_avenger:actcute":
+  {
+	"NAME": "Act Cute",
+	"DESCRIPTION": "All enemies loose !M! Strength. ALL Attacks have Taunt."
+  },
+  "exordian_avenger:slaps":
+  {
+	"NAME": "Slap Sensitive Parts",
+	"DESCRIPTION": "Deal !D! Damage. NL Taunt"
+  },
+  "exordian_avenger:spores":
+  {
+	"NAME": "Poison Spores",
+	"DESCRIPTION": "Deal !D! Damage. NL Apply 1 Poison for every Poison Spores you have NL (Currently applies !M! Poison). NL Recurrent 1"
+  },
+  "exordian_avenger:jitterbug":
+  {
+	"NAME": "Jitterbug",
+	"DESCRIPTION": "Gain !M! Thorns. Gain 1 Dexterity. Gain 2 Vulnerable. NL Ethereal NL Exhaust NL Recurrent 2"
+  },
+  "exordian_avenger:exhaustingSlash":
+  {
+	"NAME": "Exhausting Slash",
+	"DESCRIPTION": "Deal !D! damage to all enemies. End your turn."
+  },
+  "exordian_avenger:awakenaegis":
+  {
+  	"NAME": "Awaken Aegis",
+	"DESCRIPTION": "Gain !B! Block. NL Gain !M! Artifact. NL Avoid the next !M! times you would take Damage."
+  },
+  "exordian_avenger:soundwave":
+  {
+	"NAME": "Renegade Soundwave",
+	"DESCRIPTION": "Deal !D! Damage. NL Apply 2 Vulnerable. NL Shuffle !M! Dazed into your Discard Pile"
+  },
+  "exordian_avenger:backsnap":
+  {
+	"NAME": "Backsnap",
+	"DESCRIPTION": "Innate. NL Deal !D! Damage. NL The target looses !M! strength. NL Exhaust"
+  },
+  "exordian_avenger:silententrance":
+  {
+	"NAME": "Sneak",
+	"DESCRIPTION": "Apply !M! Silence. NL Exhaust. NL Ethereal.",
+	"UPGRADE_DESCRIPTION": "Innate NL Apply !M! Silence. NL Exhaust NL Ethereal"
+  },
+  "exordian_avenger:chaos":
+  {
+	"NAME": "Recurrent Chaos",
+	"DESCRIPTION": "Draw !M! card. NL Discard !M! card. NL Recurrent 1",
+	"UPGRADE_DESCRIPTION": "Draw !M! card. NL Discard !M! card. NL If this card is discarded, draw !M! card. NL Recurrent 1"
+  }
+}

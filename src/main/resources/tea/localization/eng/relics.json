@@ -1,0 +1,24 @@
+{
+  "exordian_avenger:exordian_aegis": {
+    "NAME": "The Exordian Aegis",
+    "FLAVOR": "A heavy Shield forged out of Guardian Shells and Fright.",
+    "DESCRIPTIONS": [
+      "Everytime you defeat an Elite without taking Attack Damage, upgrade this relic. Whenever you defeat an Elite with less than 20% of your max. Hp left at the end of the Fight, upgrade this Relic twice. Starts with two random Upgrades. Synergy: Black Star",
+	  " NL Current upgrades:",
+	  " NL At the start of combat gain 3 temporary hp",
+	  " NL At the start of combat gain 1 metalicize",
+	  " NL Every three turns gain 1 dexterity for one turn",
+	  " NL At the start of combat gain 1 thorns",
+	  " NL At the end of combat heal up to 5 hp lost this combat",
+	  " NL At the start of combat add a random common skill to your hand. It cost 1 less energy this combat",
+	  " NL At the start of combat upgrade a random skill in your draw pile",
+	  " NL Every three turns gain 4 block",
+	  " NL Every five turns a random enemy looses 1 strength",
+	  " NL Whenever you use a potion during combat gain 1 dexterity",
+	  " NL Negate the next curse you obtain",
+	  " NL Whenever you play at least 4 skills in one turn, two turns in a row, gain 2 plated armor",
+	  " NL Every second combat gain 1 intangible on turn 5",
+	  " NL If you have no block at the end of your turn, gain 2 block"
+    ]
+  }
+}

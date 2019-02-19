@@ -1,0 +1,3351 @@
+/*      */ package com.megacrit.cardcrawl.dungeons;
+/*      */ 
+/*      */ import com.badlogic.gdx.Application;
+/*      */ import com.badlogic.gdx.Gdx;
+/*      */ import com.badlogic.gdx.Graphics;
+/*      */ import com.badlogic.gdx.graphics.Color;
+/*      */ import com.badlogic.gdx.graphics.Texture;
+/*      */ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+/*      */ import com.badlogic.gdx.math.Interpolation;
+/*      */ import com.badlogic.gdx.math.MathUtils;
+/*      */ import com.megacrit.cardcrawl.actions.GameActionManager;
+/*      */ import com.megacrit.cardcrawl.audio.SoundMaster;
+/*      */ import com.megacrit.cardcrawl.blights.AbstractBlight;
+/*      */ import com.megacrit.cardcrawl.cards.AbstractCard;
+/*      */ import com.megacrit.cardcrawl.cards.AbstractCard.CardColor;
+/*      */ import com.megacrit.cardcrawl.cards.AbstractCard.CardRarity;
+/*      */ import com.megacrit.cardcrawl.cards.AbstractCard.CardTags;
+/*      */ import com.megacrit.cardcrawl.cards.AbstractCard.CardType;
+/*      */ import com.megacrit.cardcrawl.cards.CardGroup;
+/*      */ import com.megacrit.cardcrawl.cards.CardGroup.CardGroupType;
+/*      */ import com.megacrit.cardcrawl.cards.SoulGroup;
+/*      */ import com.megacrit.cardcrawl.cards.colorless.SwiftStrike;
+/*      */ import com.megacrit.cardcrawl.cards.curses.AscendersBane;
+/*      */ import com.megacrit.cardcrawl.characters.AbstractPlayer;
+/*      */ import com.megacrit.cardcrawl.core.CardCrawlGame;
+/*      */ import com.megacrit.cardcrawl.core.ExceptionHandler;
+/*      */ import com.megacrit.cardcrawl.core.OverlayMenu;
+/*      */ import com.megacrit.cardcrawl.core.Settings;
+/*      */ import com.megacrit.cardcrawl.credits.CreditsScreen;
+/*      */ import com.megacrit.cardcrawl.events.AbstractEvent;
+/*      */ import com.megacrit.cardcrawl.events.AbstractImageEvent;
+/*      */ import com.megacrit.cardcrawl.events.shrines.NoteForYourself;
+/*      */ import com.megacrit.cardcrawl.helpers.BlightHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.CardLibrary;
+/*      */ import com.megacrit.cardcrawl.helpers.EventHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.EventHelper.RoomResult;
+/*      */ import com.megacrit.cardcrawl.helpers.ImageMaster;
+/*      */ import com.megacrit.cardcrawl.helpers.MathHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.ModHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.MonsterHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.PotionHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.Prefs;
+/*      */ import com.megacrit.cardcrawl.helpers.RelicLibrary;
+/*      */ import com.megacrit.cardcrawl.helpers.SaveHelper;
+/*      */ import com.megacrit.cardcrawl.helpers.TipTracker;
+/*      */ import com.megacrit.cardcrawl.helpers.controller.CInputAction;
+/*      */ import com.megacrit.cardcrawl.helpers.controller.CInputActionSet;
+/*      */ import com.megacrit.cardcrawl.integrations.PublisherIntegration;
+/*      */ import com.megacrit.cardcrawl.localization.LocalizedStrings;
+/*      */ import com.megacrit.cardcrawl.localization.UIStrings;
+/*      */ import com.megacrit.cardcrawl.map.DungeonMap;
+/*      */ import com.megacrit.cardcrawl.map.MapEdge;
+/*      */ import com.megacrit.cardcrawl.map.MapGenerator;
+/*      */ import com.megacrit.cardcrawl.map.MapRoomNode;
+/*      */ import com.megacrit.cardcrawl.map.RoomTypeAssigner;
+/*      */ import com.megacrit.cardcrawl.metrics.MetricData;
+/*      */ import com.megacrit.cardcrawl.metrics.Metrics;
+/*      */ import com.megacrit.cardcrawl.metrics.Metrics.MetricRequestType;
+/*      */ import com.megacrit.cardcrawl.monsters.AbstractMonster;
+/*      */ import com.megacrit.cardcrawl.monsters.MonsterGroup;
+/*      */ import com.megacrit.cardcrawl.monsters.MonsterInfo;
+/*      */ import com.megacrit.cardcrawl.neow.NeowRoom;
+/*      */ import com.megacrit.cardcrawl.neow.NeowUnlockScreen;
+/*      */ import com.megacrit.cardcrawl.orbs.AbstractOrb;
+/*      */ import com.megacrit.cardcrawl.potions.AbstractPotion;
+/*      */ import com.megacrit.cardcrawl.potions.AbstractPotion.PotionRarity;
+/*      */ import com.megacrit.cardcrawl.relics.AbstractRelic;
+/*      */ import com.megacrit.cardcrawl.relics.AbstractRelic.RelicTier;
+/*      */ import com.megacrit.cardcrawl.rewards.chests.AbstractChest;
+/*      */ import com.megacrit.cardcrawl.rewards.chests.CursedChest;
+/*      */ import com.megacrit.cardcrawl.rewards.chests.LargeChest;
+/*      */ import com.megacrit.cardcrawl.rewards.chests.MediumChest;
+/*      */ import com.megacrit.cardcrawl.rewards.chests.SmallChest;
+/*      */ import com.megacrit.cardcrawl.rooms.AbstractRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.AbstractRoom.RoomPhase;
+/*      */ import com.megacrit.cardcrawl.rooms.EmptyRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.EventRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.MonsterRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.MonsterRoomBoss;
+/*      */ import com.megacrit.cardcrawl.rooms.MonsterRoomElite;
+/*      */ import com.megacrit.cardcrawl.rooms.RestRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.ShopRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.TreasureRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.TreasureRoomBoss;
+/*      */ import com.megacrit.cardcrawl.rooms.VictoryRoom;
+/*      */ import com.megacrit.cardcrawl.rooms.VictoryRoom.EventType;
+/*      */ import com.megacrit.cardcrawl.saveAndContinue.SaveAndContinue;
+/*      */ import com.megacrit.cardcrawl.saveAndContinue.SaveFile;
+/*      */ import com.megacrit.cardcrawl.saveAndContinue.SaveFile.SaveType;
+/*      */ import com.megacrit.cardcrawl.scenes.AbstractScene;
+/*      */ import com.megacrit.cardcrawl.screens.CardRewardScreen;
+/*      */ import com.megacrit.cardcrawl.screens.CombatRewardScreen;
+/*      */ import com.megacrit.cardcrawl.screens.DeathScreen;
+/*      */ import com.megacrit.cardcrawl.screens.DiscardPileViewScreen;
+/*      */ import com.megacrit.cardcrawl.screens.DoorUnlockScreen;
+/*      */ import com.megacrit.cardcrawl.screens.DrawPileViewScreen;
+/*      */ import com.megacrit.cardcrawl.screens.DungeonMapScreen;
+/*      */ import com.megacrit.cardcrawl.screens.ExhaustPileViewScreen;
+/*      */ import com.megacrit.cardcrawl.screens.MasterDeckViewScreen;
+/*      */ import com.megacrit.cardcrawl.screens.VictoryScreen;
+/*      */ import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
+/*      */ import com.megacrit.cardcrawl.screens.options.ConfirmPopup;
+/*      */ import com.megacrit.cardcrawl.screens.options.InputSettingsScreen;
+/*      */ import com.megacrit.cardcrawl.screens.options.SettingsScreen;
+/*      */ import com.megacrit.cardcrawl.screens.select.BossRelicSelectScreen;
+/*      */ import com.megacrit.cardcrawl.screens.select.GridCardSelectScreen;
+/*      */ import com.megacrit.cardcrawl.screens.select.HandCardSelectScreen;
+/*      */ import com.megacrit.cardcrawl.screens.stats.StatsScreen;
+/*      */ import com.megacrit.cardcrawl.shop.ShopScreen;
+/*      */ import com.megacrit.cardcrawl.ui.FtueTip;
+/*      */ import com.megacrit.cardcrawl.ui.buttons.CancelButton;
+/*      */ import com.megacrit.cardcrawl.ui.buttons.DynamicBanner;
+/*      */ import com.megacrit.cardcrawl.ui.buttons.DynamicButton;
+/*      */ import com.megacrit.cardcrawl.ui.buttons.ProceedButton;
+/*      */ import com.megacrit.cardcrawl.ui.panels.TopPanel;
+/*      */ import com.megacrit.cardcrawl.unlock.AbstractUnlock;
+/*      */ import com.megacrit.cardcrawl.unlock.UnlockCharacterScreen;
+/*      */ import com.megacrit.cardcrawl.unlock.UnlockTracker;
+/*      */ import com.megacrit.cardcrawl.vfx.AbstractGameEffect;
+/*      */ import com.megacrit.cardcrawl.vfx.PlayerTurnEffect;
+/*      */ import java.util.ArrayList;
+/*      */ import java.util.Collections;
+/*      */ import java.util.HashMap;
+/*      */ import java.util.Iterator;
+/*      */ import java.util.Map.Entry;
+/*      */ import java.util.Objects;
+/*      */ import org.apache.logging.log4j.LogManager;
+/*      */ import org.apache.logging.log4j.Logger;
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ public abstract class AbstractDungeon
+/*      */ {
+/*  177 */   protected static final Logger logger = LogManager.getLogger(AbstractDungeon.class.getName());
+/*      */   
+/*  179 */   private static final UIStrings uiStrings = CardCrawlGame.languagePack.getUIString("AbstractDungeon");
+/*  180 */   public static final String[] TEXT = uiStrings.TEXT;
+/*      */   public static String name;
+/*      */   public static String levelNum;
+/*      */   public static String id;
+/*  184 */   public static int floorNum = 0;
+/*  185 */   public static int actNum = 0;
+/*      */   public static AbstractPlayer player;
+/*  187 */   public static ArrayList<AbstractUnlock> unlocks = new ArrayList();
+/*  188 */   protected static float shrineChance = 0.25F;
+/*  189 */   private static boolean firstChest = true; private static boolean encounteredCursedChest = false;
+/*      */   protected static float cardUpgradedChance;
+/*      */   public static AbstractCard transformedCard;
+/*  192 */   public static boolean loading_post_combat = false; public static boolean is_victory = false;
+/*      */   
+/*      */   public static Texture eventBackgroundImg;
+/*      */   
+/*      */   public static com.megacrit.cardcrawl.random.Random monsterRng;
+/*      */   
+/*      */   public static com.megacrit.cardcrawl.random.Random mapRng;
+/*      */   
+/*      */   public static com.megacrit.cardcrawl.random.Random eventRng;
+/*      */   
+/*      */   public static com.megacrit.cardcrawl.random.Random merchantRng;
+/*      */   
+/*      */   public static com.megacrit.cardcrawl.random.Random cardRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random treasureRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random relicRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random potionRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random monsterHpRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random aiRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random shuffleRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random cardRandomRng;
+/*      */   public static com.megacrit.cardcrawl.random.Random miscRng;
+/*  213 */   public static CardGroup srcColorlessCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  214 */   public static CardGroup srcCurseCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  215 */   public static CardGroup srcCommonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  216 */   public static CardGroup srcUncommonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  217 */   public static CardGroup srcRareCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  218 */   public static CardGroup colorlessCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  219 */   public static CardGroup curseCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  220 */   public static CardGroup commonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  221 */   public static CardGroup uncommonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*  222 */   public static CardGroup rareCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*      */   
+/*      */ 
+/*  225 */   public static ArrayList<String> commonRelicPool = new ArrayList();
+/*  226 */   public static ArrayList<String> uncommonRelicPool = new ArrayList();
+/*  227 */   public static ArrayList<String> rareRelicPool = new ArrayList();
+/*  228 */   public static ArrayList<String> shopRelicPool = new ArrayList();
+/*  229 */   public static ArrayList<String> bossRelicPool = new ArrayList();
+/*      */   
+/*      */ 
+/*  232 */   public static String lastCombatMetricKey = null;
+/*  233 */   public static ArrayList<String> monsterList = new ArrayList();
+/*  234 */   public static ArrayList<String> eliteMonsterList = new ArrayList();
+/*  235 */   public static ArrayList<String> bossList = new ArrayList();
+/*      */   
+/*      */   public static String bossKey;
+/*      */   
+/*  239 */   public static ArrayList<String> eventList = new ArrayList();
+/*  240 */   public static ArrayList<String> shrineList = new ArrayList();
+/*  241 */   public static ArrayList<String> specialOneTimeEventList = new ArrayList();
+/*  242 */   public static GameActionManager actionManager = new GameActionManager();
+/*  243 */   public static ArrayList<AbstractGameEffect> topLevelEffects = new ArrayList();
+/*  244 */   public static ArrayList<AbstractGameEffect> topLevelEffectsQueue = new ArrayList();
+/*  245 */   public static ArrayList<AbstractGameEffect> effectList = new ArrayList();
+/*  246 */   public static ArrayList<AbstractGameEffect> effectsQueue = new ArrayList();
+/*  247 */   public static boolean turnPhaseEffectActive = false;
+/*      */   public static float colorlessRareChance;
+/*      */   protected static float shopRoomChance;
+/*      */   protected static float restRoomChance;
+/*      */   protected static float eventRoomChance;
+/*      */   protected static float eliteRoomChance;
+/*      */   protected static float treasureRoomChance;
+/*      */   protected static int smallChestChance;
+/*      */   protected static int mediumChestChance;
+/*      */   protected static int largeChestChance;
+/*      */   protected static int commonRelicChance;
+/*  258 */   protected static int uncommonRelicChance; protected static int rareRelicChance; public static AbstractScene scene; public static MapRoomNode currMapNode; public static ArrayList<ArrayList<MapRoomNode>> map; public static boolean leftRoomAvailable; public static boolean centerRoomAvailable; public static boolean rightRoomAvailable; public static boolean firstRoomChosen = false;
+/*      */   public static final int MAP_HEIGHT = 15;
+/*  260 */   public static final int MAP_WIDTH = 7; public static final int MAP_DENSITY = 6; public static final int FINAL_ACT_MAP_HEIGHT = 3; public static RenderScene rs = RenderScene.NORMAL;
+/*  261 */   public static ArrayList<Integer> pathX = new ArrayList();
+/*  262 */   public static ArrayList<Integer> pathY = new ArrayList();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*  267 */   public static Color topGradientColor = new Color(1.0F, 1.0F, 1.0F, 0.25F);
+/*  268 */   public static Color botGradientColor = new Color(1.0F, 1.0F, 1.0F, 0.25F);
+/*  269 */   public static float floorY = 340.0F * Settings.scale;
+/*  270 */   public static TopPanel topPanel = new TopPanel();
+/*  271 */   public static CardRewardScreen cardRewardScreen = new CardRewardScreen();
+/*  272 */   public static CombatRewardScreen combatRewardScreen = new CombatRewardScreen();
+/*  273 */   public static BossRelicSelectScreen bossRelicScreen = new BossRelicSelectScreen();
+/*  274 */   public static MasterDeckViewScreen deckViewScreen = new MasterDeckViewScreen();
+/*  275 */   public static DiscardPileViewScreen discardPileViewScreen = new DiscardPileViewScreen();
+/*  276 */   public static DrawPileViewScreen gameDeckViewScreen = new DrawPileViewScreen();
+/*  277 */   public static ExhaustPileViewScreen exhaustPileViewScreen = new ExhaustPileViewScreen();
+/*  278 */   public static SettingsScreen settingsScreen = new SettingsScreen();
+/*  279 */   public static InputSettingsScreen inputSettingsScreen = new InputSettingsScreen();
+/*  280 */   public static DungeonMapScreen dungeonMapScreen = new DungeonMapScreen();
+/*  281 */   public static GridCardSelectScreen gridSelectScreen = new GridCardSelectScreen();
+/*  282 */   public static HandCardSelectScreen handCardSelectScreen = new HandCardSelectScreen();
+/*  283 */   public static ShopScreen shopScreen = new ShopScreen();
+/*  284 */   public static CreditsScreen creditsScreen = null;
+/*  285 */   public static FtueTip ftue = null;
+/*      */   public static DeathScreen deathScreen;
+/*      */   public static VictoryScreen victoryScreen;
+/*  288 */   public static UnlockCharacterScreen unlockScreen = new UnlockCharacterScreen();
+/*  289 */   public static NeowUnlockScreen gUnlockScreen = new NeowUnlockScreen();
+/*  290 */   public static boolean isScreenUp = false;
+/*      */   public static OverlayMenu overlayMenu;
+/*      */   public static CurrentScreen screen;
+/*      */   public static CurrentScreen previousScreen;
+/*      */   public static DynamicBanner dynamicBanner;
+/*  295 */   public static DynamicButton dynamicButton; public static boolean screenSwap = false;
+/*      */   
+/*      */ 
+/*      */   public static boolean isDungeonBeaten;
+/*      */   
+/*      */ 
+/*  301 */   public static int cardBlizzStartOffset = 5;
+/*  302 */   public static int cardBlizzRandomizer = cardBlizzStartOffset;
+/*  303 */   public static int cardBlizzGrowth = 1;
+/*  304 */   public static int cardBlizzMaxOffset = -40;
+/*      */   
+/*      */   public static boolean isFadingIn;
+/*      */   public static boolean isFadingOut;
+/*      */   public static boolean waitingOnFadeOut;
+/*      */   protected static float fadeTimer;
+/*      */   public static Color fadeColor;
+/*      */   public static MapRoomNode nextRoom;
+/*      */   public static float sceneOffsetY;
+/*      */   public static float sceneOffsetTimer;
+/*  314 */   public static ArrayList<String> relicsToRemoveOnStart = new ArrayList();
+/*  315 */   public static int bossCount = 0;
+/*      */   
+/*      */   public static final float SCENE_OFFSET_TIME = 1.3F;
+/*      */   
+/*  319 */   public static boolean isAscensionMode = false;
+/*  320 */   public static int ascensionLevel = 0;
+/*      */   
+/*      */ 
+/*  323 */   public static ArrayList<AbstractBlight> blightPool = new ArrayList();
+/*      */   
+/*      */   public static boolean ascensionCheck;
+/*      */   
+/*  327 */   private static final Logger LOGGER = LogManager.getLogger(AbstractDungeon.class.getName());
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public AbstractDungeon(String name, String levelId, AbstractPlayer p, ArrayList<String> newSpecialOneTimeEventList)
+/*      */   {
+/*  335 */     ascensionCheck = UnlockTracker.isAscensionUnlocked(p);
+/*  336 */     CardCrawlGame.dungeon = this;
+/*  337 */     long startTime = System.currentTimeMillis();
+/*  338 */     name = name;
+/*  339 */     id = levelId;
+/*  340 */     player = p;
+/*  341 */     topPanel.setPlayerName();
+/*  342 */     actionManager = new GameActionManager();
+/*  343 */     overlayMenu = new OverlayMenu(p);
+/*  344 */     dynamicBanner = new DynamicBanner();
+/*  345 */     dynamicButton = new DynamicButton();
+/*  346 */     unlocks.clear();
+/*      */     
+/*  348 */     specialOneTimeEventList = newSpecialOneTimeEventList;
+/*      */     
+/*      */ 
+/*  351 */     isFadingIn = false;
+/*  352 */     isFadingOut = false;
+/*  353 */     waitingOnFadeOut = false;
+/*  354 */     fadeTimer = 1.0F;
+/*  355 */     isDungeonBeaten = false;
+/*  356 */     isScreenUp = false;
+/*      */     
+/*  358 */     dungeonTransitionSetup();
+/*  359 */     generateMonsters();
+/*  360 */     initializeBoss();
+/*  361 */     setBoss((String)bossList.get(0));
+/*  362 */     initializeEventList();
+/*  363 */     initializeEventImg();
+/*  364 */     initializeShrineList();
+/*  365 */     initializeCardPools();
+/*  366 */     if (floorNum == 0) {
+/*  367 */       p.initializeStarterDeck();
+/*      */     }
+/*  369 */     initializePotions();
+/*  370 */     BlightHelper.initialize();
+/*      */     
+/*  372 */     if (id.equals("Exordium")) {
+/*  373 */       screen = CurrentScreen.NONE;
+/*  374 */       isScreenUp = false;
+/*      */     } else {
+/*  376 */       screen = CurrentScreen.MAP;
+/*  377 */       isScreenUp = true;
+/*      */     }
+/*      */     
+/*  380 */     logger.info("Content generation time: " + (System.currentTimeMillis() - startTime) + "ms");
+/*      */   }
+/*      */   
+/*      */   public AbstractDungeon(String name, AbstractPlayer p, SaveFile saveFile)
+/*      */   {
+/*  385 */     ascensionCheck = UnlockTracker.isAscensionUnlocked(p);
+/*  386 */     id = saveFile.level_name;
+/*  387 */     CardCrawlGame.dungeon = this;
+/*  388 */     long startTime = System.currentTimeMillis();
+/*  389 */     name = name;
+/*  390 */     player = p;
+/*  391 */     topPanel.setPlayerName();
+/*  392 */     actionManager = new GameActionManager();
+/*  393 */     overlayMenu = new OverlayMenu(p);
+/*  394 */     dynamicBanner = new DynamicBanner();
+/*  395 */     dynamicButton = new DynamicButton();
+/*  396 */     isFadingIn = false;
+/*  397 */     isFadingOut = false;
+/*  398 */     waitingOnFadeOut = false;
+/*  399 */     fadeTimer = 1.0F;
+/*  400 */     isDungeonBeaten = false;
+/*  401 */     isScreenUp = false;
+/*  402 */     firstRoomChosen = true;
+/*  403 */     unlocks.clear();
+/*      */     try
+/*      */     {
+/*  406 */       loadSave(saveFile);
+/*      */     } catch (Exception e) {
+/*  408 */       logger.info("Deleting save due to crash...");
+/*  409 */       SaveAndContinue.deleteSave(player);
+/*  410 */       ExceptionHandler.handleException(e, LOGGER);
+/*  411 */       LogManager.shutdown();
+/*  412 */       Gdx.app.exit();
+/*      */     }
+/*      */     
+/*  415 */     initializeEventImg();
+/*  416 */     initializeShrineList();
+/*  417 */     initializeCardPools();
+/*  418 */     initializePotions();
+/*  419 */     BlightHelper.initialize();
+/*  420 */     screen = CurrentScreen.NONE;
+/*  421 */     isScreenUp = false;
+/*      */     
+/*  423 */     logger.info("Dungeon load time: " + (System.currentTimeMillis() - startTime) + "ms");
+/*      */   }
+/*      */   
+/*      */   private void setBoss(String key) {
+/*  427 */     bossKey = key;
+/*      */     
+/*  429 */     if (key.equals("The Guardian")) {
+/*  430 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/guardian.png");
+/*  431 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/guardian.png");
+/*  432 */     } else if (key.equals("Hexaghost")) {
+/*  433 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/hexaghost.png");
+/*  434 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/hexaghost.png");
+/*  435 */     } else if (key.equals("Slime Boss")) {
+/*  436 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/slime.png");
+/*  437 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/slime.png");
+/*  438 */     } else if (key.equals("Collector")) {
+/*  439 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/collector.png");
+/*  440 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/collector.png");
+/*  441 */     } else if (key.equals("Automaton")) {
+/*  442 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/automaton.png");
+/*  443 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/automaton.png");
+/*  444 */     } else if (key.equals("Champ")) {
+/*  445 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/champ.png");
+/*  446 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/champ.png");
+/*  447 */     } else if (key.equals("Awakened One")) {
+/*  448 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/awakened.png");
+/*  449 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/awakened.png");
+/*  450 */     } else if (key.equals("Time Eater")) {
+/*  451 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/timeeater.png");
+/*  452 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/timeeater.png");
+/*  453 */     } else if (key.equals("Donu and Deca")) {
+/*  454 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/donu.png");
+/*  455 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/donu.png");
+/*  456 */     } else if (key.equals("The Heart")) {
+/*  457 */       DungeonMap.boss = ImageMaster.loadImage("images/ui/map/boss/heart.png");
+/*  458 */       DungeonMap.bossOutline = ImageMaster.loadImage("images/ui/map/bossOutline/heart.png");
+/*      */     } else {
+/*  460 */       logger.info("WARNING: UNKNOWN BOSS ICON: " + key);
+/*  461 */       DungeonMap.boss = null;
+/*      */     }
+/*      */     
+/*  464 */     logger.info("[BOSS] " + key);
+/*      */   }
+/*      */   
+/*      */   protected abstract void initializeLevelSpecificChances();
+/*      */   
+/*      */   public static boolean isPlayerInDungeon() {
+/*  470 */     return CardCrawlGame.dungeon != null;
+/*      */   }
+/*      */   
+/*      */   public static void generateSeeds() {
+/*  474 */     logger.info("Generating seeds: " + Settings.seed);
+/*  475 */     monsterRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  476 */     eventRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  477 */     merchantRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  478 */     cardRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  479 */     treasureRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  480 */     relicRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  481 */     monsterHpRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  482 */     potionRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  483 */     aiRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  484 */     shuffleRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  485 */     cardRandomRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*  486 */     miscRng = new com.megacrit.cardcrawl.random.Random(Settings.seed);
+/*      */   }
+/*      */   
+/*      */   public static void loadSeeds(SaveFile save) {
+/*  490 */     if ((save.is_daily) || (save.is_trial)) {
+/*  491 */       Settings.isDailyRun = save.is_daily;
+/*  492 */       Settings.isTrial = save.is_trial;
+/*  493 */       Settings.specialSeed = Long.valueOf(save.special_seed);
+/*  494 */       if (save.is_daily) {
+/*  495 */         ModHelper.setTodaysMods(save.special_seed, player.chosenClass);
+/*      */       } else {
+/*  497 */         ModHelper.setTodaysMods(save.seed, player.chosenClass);
+/*      */       }
+/*      */     }
+/*      */     
+/*  501 */     monsterRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.monster_seed_count);
+/*  502 */     eventRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.event_seed_count);
+/*  503 */     merchantRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.merchant_seed_count);
+/*  504 */     cardRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.card_seed_count);
+/*  505 */     cardBlizzRandomizer = save.card_random_seed_randomizer;
+/*  506 */     treasureRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.treasure_seed_count);
+/*  507 */     relicRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.relic_seed_count);
+/*  508 */     potionRng = new com.megacrit.cardcrawl.random.Random(Settings.seed, save.potion_seed_count);
+/*      */     
+/*      */ 
+/*  511 */     logger.info("Loading seeds: " + Settings.seed);
+/*  512 */     logger.info("Monster seed:  " + monsterRng.counter);
+/*  513 */     logger.info("Event seed:    " + eventRng.counter);
+/*  514 */     logger.info("Merchant seed: " + merchantRng.counter);
+/*  515 */     logger.info("Card seed:     " + cardRng.counter);
+/*  516 */     logger.info("Treasure seed: " + treasureRng.counter);
+/*  517 */     logger.info("Relic seed:    " + relicRng.counter);
+/*  518 */     logger.info("Potion seed:   " + potionRng.counter);
+/*      */   }
+/*      */   
+/*      */   public void populatePathTaken(SaveFile saveFile) {
+/*  522 */     MapRoomNode node = null;
+/*      */     
+/*  524 */     if (saveFile.current_room.equals(MonsterRoomBoss.class.getName())) {
+/*  525 */       node = new MapRoomNode(-1, 15);
+/*  526 */       node.room = new MonsterRoomBoss();
+/*  527 */       nextRoom = node;
+/*  528 */     } else if (saveFile.current_room.equals(TreasureRoomBoss.class.getName())) {
+/*  529 */       node = new MapRoomNode(-1, 15);
+/*  530 */       node.room = new TreasureRoomBoss();
+/*  531 */       nextRoom = node;
+/*      */ 
+/*      */     }
+/*  534 */     else if ((saveFile.room_y == 15) && (saveFile.room_x == -1)) {
+/*  535 */       node = new MapRoomNode(-1, 15);
+/*  536 */       node.room = new VictoryRoom(VictoryRoom.EventType.HEART);
+/*  537 */       nextRoom = node;
+/*      */ 
+/*      */     }
+/*  540 */     else if (saveFile.current_room.equals(NeowRoom.class.getName())) {
+/*  541 */       nextRoom = null;
+/*      */     } else {
+/*  543 */       nextRoom = (MapRoomNode)((ArrayList)map.get(saveFile.room_y)).get(saveFile.room_x);
+/*      */     }
+/*      */     
+/*      */ 
+/*  547 */     for (int i = 0; i < pathX.size(); i++) {
+/*  548 */       if (((Integer)pathY.get(i)).intValue() == 14) {
+/*  549 */         MapRoomNode node2 = (MapRoomNode)((ArrayList)map.get(((Integer)pathY.get(i)).intValue())).get(((Integer)pathX.get(i)).intValue());
+/*  550 */         for (MapEdge e : node2.getEdges()) {
+/*  551 */           if (e != null) {
+/*  552 */             e.markAsTaken();
+/*      */           }
+/*      */         }
+/*      */       }
+/*  556 */       if (((Integer)pathY.get(i)).intValue() < 15) {
+/*  557 */         ((MapRoomNode)((ArrayList)map.get(((Integer)pathY.get(i)).intValue())).get(((Integer)pathX.get(i)).intValue())).taken = true;
+/*  558 */         if (node != null) {
+/*  559 */           MapEdge connectedEdge = node.getEdgeConnectedTo(
+/*  560 */             (MapRoomNode)((ArrayList)map.get(((Integer)pathY.get(i)).intValue())).get(((Integer)pathX.get(i)).intValue()));
+/*  561 */           if (connectedEdge != null) {
+/*  562 */             connectedEdge.markAsTaken();
+/*      */           }
+/*      */         }
+/*  565 */         node = (MapRoomNode)((ArrayList)map.get(((Integer)pathY.get(i)).intValue())).get(((Integer)pathX.get(i)).intValue());
+/*      */       }
+/*      */     }
+/*      */     
+/*  569 */     if (isLoadingIntoNeow(saveFile))
+/*      */     {
+/*  571 */       logger.info("Loading into Neow");
+/*  572 */       currMapNode = new MapRoomNode(0, -1);
+/*  573 */       currMapNode.room = new EmptyRoom();
+/*  574 */       nextRoom = null;
+/*      */     }
+/*      */     else {
+/*  577 */       logger.info("Loading into: " + saveFile.room_x + "," + saveFile.room_y);
+/*  578 */       currMapNode = new MapRoomNode(0, -1);
+/*  579 */       currMapNode.room = new EmptyRoom();
+/*      */     }
+/*      */     
+/*  582 */     nextRoomTransition(saveFile);
+/*      */     
+/*      */ 
+/*  585 */     if (isLoadingIntoNeow(saveFile)) {
+/*  586 */       if (saveFile.chose_neow_reward) {
+/*  587 */         currMapNode.room = new NeowRoom(true);
+/*      */       } else {
+/*  589 */         currMapNode.room = new NeowRoom(false);
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   protected boolean isLoadingIntoNeow(SaveFile saveFile) {
+/*  595 */     return (floorNum == 0) || (saveFile.current_room.equals(NeowRoom.class.getName()));
+/*      */   }
+/*      */   
+/*      */   public static AbstractChest getRandomChest() {
+/*  599 */     int roll = treasureRng.random(0, 99);
+/*      */     
+/*  601 */     if (roll < smallChestChance) {
+/*  602 */       firstChest = false;
+/*  603 */       return new SmallChest(); }
+/*  604 */     if (roll < mediumChestChance + smallChestChance) {
+/*  605 */       firstChest = false;
+/*  606 */       return new MediumChest(); }
+/*  607 */     if (roll < largeChestChance + mediumChestChance + smallChestChance) {
+/*  608 */       firstChest = false;
+/*  609 */       return new LargeChest();
+/*      */     }
+/*  611 */     if (firstChest) {
+/*  612 */       firstChest = false;
+/*  613 */       return new SmallChest();
+/*      */     }
+/*  615 */     if (!encounteredCursedChest) {
+/*  616 */       encounteredCursedChest = true;
+/*  617 */       return new CursedChest();
+/*      */     }
+/*  619 */     return new SmallChest();
+/*      */   }
+/*      */   
+/*      */ 
+/*      */   protected static void generateMap()
+/*      */   {
+/*  625 */     long startTime = System.currentTimeMillis();
+/*      */     
+/*  627 */     int mapHeight = 15;
+/*  628 */     int mapWidth = 7;
+/*  629 */     int mapPathDensity = 6;
+/*      */     
+/*  631 */     ArrayList<AbstractRoom> roomList = new ArrayList();
+/*  632 */     map = MapGenerator.generateDungeon(mapHeight, mapWidth, mapPathDensity, mapRng);
+/*      */     
+/*      */ 
+/*  635 */     int count = 0;
+/*  636 */     for (ArrayList<MapRoomNode> a : map) {
+/*  637 */       for (MapRoomNode n : a) {
+/*  638 */         if ((n.hasEdges()) && 
+/*  639 */           (n.y != map.size() - 2))
+/*      */         {
+/*      */ 
+/*  642 */           count++;
+/*      */         }
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/*  648 */     generateRoomTypes(roomList, count);
+/*      */     
+/*  650 */     RoomTypeAssigner.assignRowAsRoomType((ArrayList)map.get(map.size() - 1), RestRoom.class);
+/*  651 */     RoomTypeAssigner.assignRowAsRoomType((ArrayList)map.get(0), MonsterRoom.class);
+/*  652 */     if ((Settings.isEndless) && (player.hasBlight("MimicInfestation"))) {
+/*  653 */       RoomTypeAssigner.assignRowAsRoomType((ArrayList)map.get(8), MonsterRoomElite.class);
+/*      */     } else {
+/*  655 */       RoomTypeAssigner.assignRowAsRoomType((ArrayList)map.get(8), TreasureRoom.class);
+/*      */     }
+/*  657 */     map = RoomTypeAssigner.distributeRoomsAcrossMap(mapRng, map, roomList);
+/*      */     
+/*  659 */     logger.info("Generated the following dungeon map:");
+/*  660 */     logger.info(MapGenerator.toString(map, Boolean.valueOf(true)));
+/*  661 */     logger.info("Game Seed: " + Settings.seed);
+/*  662 */     logger.info("Map generation time: " + (System.currentTimeMillis() - startTime) + "ms");
+/*  663 */     firstRoomChosen = false;
+/*      */     
+/*  665 */     fadeIn();
+/*  666 */     setEmeraldElite();
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   protected static void setEmeraldElite()
+/*      */   {
+/*  673 */     if ((Settings.isFinalActAvailable) && (!Settings.hasEmeraldKey)) {
+/*  674 */       ArrayList<MapRoomNode> eliteNodes = new ArrayList();
+/*      */       
+/*  676 */       for (int i = 0; i < map.size(); i++) {
+/*  677 */         for (int j = 0; j < ((ArrayList)map.get(i)).size(); j++) {
+/*  678 */           if ((((MapRoomNode)((ArrayList)map.get(i)).get(j)).room instanceof MonsterRoomElite)) {
+/*  679 */             eliteNodes.add(((ArrayList)map.get(i)).get(j));
+/*      */           }
+/*      */         }
+/*      */       }
+/*      */       
+/*  684 */       MapRoomNode chosenNode = (MapRoomNode)eliteNodes.get(mapRng.random(0, eliteNodes.size() - 1));
+/*  685 */       chosenNode.hasEmeraldKey = true;
+/*      */       
+/*  687 */       logger.info("[INFO] Elite nodes identified: " + eliteNodes.size());
+/*  688 */       logger.info("[INFO] Emerald Key  placed in: [" + chosenNode.x + "," + chosenNode.y + "]");
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   private static void generateRoomTypes(ArrayList<AbstractRoom> roomList, int availableRoomCount) {
+/*  693 */     logger.info("Generating Room Types! There are " + availableRoomCount + " rooms:");
+/*  694 */     int shopCount = Math.round(availableRoomCount * shopRoomChance);
+/*  695 */     logger.info(" SHOP (" + toPercentage(shopRoomChance) + "): " + shopCount);
+/*  696 */     int restCount = Math.round(availableRoomCount * restRoomChance);
+/*  697 */     logger.info(" REST (" + toPercentage(restRoomChance) + "): " + restCount);
+/*  698 */     int treasureCount = Math.round(availableRoomCount * treasureRoomChance);
+/*  699 */     logger.info(" TRSRE (" + toPercentage(treasureRoomChance) + "): " + treasureCount);
+/*      */     
+/*      */     int eliteCount;
+/*      */     
+/*  703 */     if (ModHelper.isModEnabled("Elite Swarm")) {
+/*  704 */       int eliteCount = Math.round(availableRoomCount * (eliteRoomChance * 2.5F));
+/*  705 */       logger.info(" ELITE (" + toPercentage(eliteRoomChance) + "): " + eliteCount);
+/*  706 */     } else if (ascensionLevel >= 1) {
+/*  707 */       int eliteCount = Math.round(availableRoomCount * eliteRoomChance * 1.6F);
+/*  708 */       logger.info(" ELITE (" + toPercentage(eliteRoomChance) + "): " + eliteCount);
+/*      */     }
+/*      */     else {
+/*  711 */       eliteCount = Math.round(availableRoomCount * eliteRoomChance);
+/*  712 */       logger.info(" ELITE (" + toPercentage(eliteRoomChance) + "): " + eliteCount);
+/*      */     }
+/*      */     
+/*      */ 
+/*  716 */     int eventCount = Math.round(availableRoomCount * eventRoomChance);
+/*  717 */     logger.info(" EVNT (" + toPercentage(eventRoomChance) + "): " + eventCount);
+/*  718 */     int monsterCount = availableRoomCount - shopCount - restCount - treasureCount - eliteCount - eventCount;
+/*  719 */     logger.info(" MSTR (" + 
+/*  720 */       toPercentage(1.0F - shopRoomChance - restRoomChance - treasureRoomChance - eliteRoomChance - eventRoomChance) + "): " + monsterCount);
+/*      */     
+/*      */ 
+/*      */ 
+/*  724 */     for (int i = 0; i < shopCount; i++) {
+/*  725 */       roomList.add(new ShopRoom());
+/*      */     }
+/*  727 */     for (int i = 0; i < restCount; i++) {
+/*  728 */       roomList.add(new RestRoom());
+/*      */     }
+/*  730 */     for (int i = 0; i < eliteCount; i++) {
+/*  731 */       roomList.add(new MonsterRoomElite());
+/*      */     }
+/*  733 */     for (int i = 0; i < eventCount; i++) {
+/*  734 */       roomList.add(new EventRoom());
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   private static String toPercentage(float n) {
+/*  739 */     return String.format("%.0f", new Object[] { Float.valueOf(n * 100.0F) }) + "%";
+/*      */   }
+/*      */   
+/*      */   private static void firstRoomLogic()
+/*      */   {
+/*  744 */     initializeFirstRoom();
+/*      */     
+/*      */ 
+/*      */ 
+/*  748 */     leftRoomAvailable = currMapNode.leftNodeAvailable();
+/*  749 */     centerRoomAvailable = currMapNode.centerNodeAvailable();
+/*  750 */     rightRoomAvailable = currMapNode.rightNodeAvailable();
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   private boolean passesDonutCheck(ArrayList<ArrayList<MapRoomNode>> map)
+/*      */   {
+/*  761 */     logger.info("CASEY'S DONUT CHECK: ");
+/*  762 */     int width = ((ArrayList)map.get(0)).size();
+/*  763 */     int height = map.size();
+/*  764 */     logger.info(" HEIGHT: " + height);
+/*  765 */     logger.info(" WIDTH:  " + width);
+/*      */     
+/*      */ 
+/*  768 */     int nodeCount = 0;
+/*  769 */     boolean[] roomHasNode = new boolean[width];
+/*  770 */     for (int i = 0; i < width; i++) {
+/*  771 */       roomHasNode[i] = false;
+/*      */     }
+/*  773 */     ArrayList<MapRoomNode> secondToLastRow = (ArrayList)map.get(map.size() - 2);
+/*  774 */     for (Iterator localIterator1 = secondToLastRow.iterator(); localIterator1.hasNext();) { n = (MapRoomNode)localIterator1.next();
+/*  775 */       for (localIterator2 = n.getEdges().iterator(); localIterator2.hasNext();) { e = (MapEdge)localIterator2.next();
+/*  776 */         roomHasNode[e.dstX] = true; } }
+/*      */     MapRoomNode n;
+/*      */     Iterator localIterator2;
+/*  779 */     MapEdge e; for (int i = 0; i < width - 1; i++) {
+/*  780 */       if (roomHasNode[i] != 0) {
+/*  781 */         nodeCount++;
+/*      */       }
+/*      */     }
+/*  784 */     if (nodeCount == 1) {
+/*  785 */       logger.info(" [SUCCESS] " + nodeCount + " NODE IN LAST ROW");
+/*      */     } else {
+/*  787 */       logger.info(" [FAIL] " + nodeCount + " NODES IN LAST ROW");
+/*  788 */       return false;
+/*      */     }
+/*      */     
+/*      */ 
+/*  792 */     int roomCount = 0;
+/*  793 */     for (Object rows : map) {
+/*  794 */       for (MapRoomNode n : (ArrayList)rows) {
+/*  795 */         if (n.room != null) {
+/*  796 */           roomCount++;
+/*      */         }
+/*      */       }
+/*      */     }
+/*  800 */     logger.info(" ROOM COUNT: " + roomCount);
+/*      */     
+/*      */ 
+/*      */ 
+/*  804 */     return true;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractRoom getCurrRoom()
+/*      */   {
+/*  814 */     return currMapNode.getRoom();
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static MapRoomNode getCurrMapNode()
+/*      */   {
+/*  823 */     return currMapNode;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static void setCurrMapNode(MapRoomNode currMapNode)
+/*      */   {
+/*  832 */     SoulGroup group = currMapNode.room.souls;
+/*  833 */     currMapNode = currMapNode;
+/*      */     
+/*  835 */     if (currMapNode.room == null) {
+/*  836 */       logger.warn("This player loaded into a room that no longer exists (due to a new map gen?)");
+/*  837 */       for (int i = 0; i < 5; i++) {
+/*  838 */         if (((MapRoomNode)((ArrayList)map.get(currMapNode.y)).get(i)).room != null) {
+/*  839 */           currMapNode = (MapRoomNode)((ArrayList)map.get(currMapNode.y)).get(i);
+/*  840 */           currMapNode.room = ((MapRoomNode)((ArrayList)map.get(currMapNode.y)).get(i)).room;
+/*  841 */           nextRoom.room = ((MapRoomNode)((ArrayList)map.get(currMapNode.y)).get(i)).room;
+/*  842 */           break;
+/*      */         }
+/*      */       }
+/*      */     } else {
+/*  846 */       currMapNode.room.souls = group;
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public ArrayList<ArrayList<MapRoomNode>> getMap()
+/*      */   {
+/*  887 */     return map;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractRelic returnRandomRelic(AbstractRelic.RelicTier tier)
+/*      */   {
+/*  897 */     logger.info("Returning " + tier.name() + " relic");
+/*  898 */     return RelicLibrary.getRelic(returnRandomRelicKey(tier)).makeCopy();
+/*      */   }
+/*      */   
+/*      */   public static AbstractRelic returnRandomScreenlessRelic(AbstractRelic.RelicTier tier) {
+/*  902 */     logger.info("Returning " + tier.name() + " relic");
+/*  903 */     AbstractRelic tmpRelic = RelicLibrary.getRelic(returnRandomRelicKey(tier)).makeCopy();
+/*      */     
+/*  905 */     while ((Objects.equals(tmpRelic.relicId, "Bottled Flame")) || (Objects.equals(tmpRelic.relicId, "Bottled Lightning")) || 
+/*      */     
+/*  907 */       (Objects.equals(tmpRelic.relicId, "Bottled Tornado")) || (Objects.equals(tmpRelic.relicId, "Whetstone")))
+/*      */     {
+/*      */ 
+/*      */ 
+/*  911 */       tmpRelic = RelicLibrary.getRelic(returnRandomRelicKey(tier)).makeCopy();
+/*      */     }
+/*      */     
+/*  914 */     return tmpRelic;
+/*      */   }
+/*      */   
+/*      */   public static AbstractRelic returnRandomNonCampfireRelic(AbstractRelic.RelicTier tier) {
+/*  918 */     logger.info("Returning " + tier.name() + " relic");
+/*  919 */     AbstractRelic tmpRelic = RelicLibrary.getRelic(returnRandomRelicKey(tier)).makeCopy();
+/*  920 */     while ((Objects.equals(tmpRelic.relicId, "Peace Pipe")) || (Objects.equals(tmpRelic.relicId, "Shovel")) || 
+/*  921 */       (Objects.equals(tmpRelic.relicId, "Girya")))
+/*      */     {
+/*  923 */       tmpRelic = RelicLibrary.getRelic(returnRandomRelicKey(tier)).makeCopy();
+/*      */     }
+/*  925 */     return tmpRelic;
+/*      */   }
+/*      */   
+/*      */   public static AbstractRelic returnRandomRelicEnd(AbstractRelic.RelicTier tier) {
+/*  929 */     logger.info("Returning " + tier.name() + " relic");
+/*  930 */     return RelicLibrary.getRelic(returnEndRandomRelicKey(tier)).makeCopy();
+/*      */   }
+/*      */   
+/*      */   public static String returnEndRandomRelicKey(AbstractRelic.RelicTier tier) {
+/*  934 */     String retVal = null;
+/*      */     
+/*  936 */     switch (tier) {
+/*      */     case COMMON: 
+/*  938 */       if (commonRelicPool.isEmpty()) {
+/*  939 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.UNCOMMON);
+/*      */       } else {
+/*  941 */         retVal = (String)commonRelicPool.remove(commonRelicPool.size() - 1);
+/*      */       }
+/*  943 */       break;
+/*      */     case UNCOMMON: 
+/*  945 */       if (uncommonRelicPool.isEmpty()) {
+/*  946 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.RARE);
+/*      */       } else {
+/*  948 */         retVal = (String)uncommonRelicPool.remove(uncommonRelicPool.size() - 1);
+/*      */       }
+/*  950 */       break;
+/*      */     case RARE: 
+/*  952 */       if (rareRelicPool.isEmpty()) {
+/*  953 */         retVal = "Circlet";
+/*      */       } else {
+/*  955 */         retVal = (String)rareRelicPool.remove(rareRelicPool.size() - 1);
+/*      */       }
+/*  957 */       break;
+/*      */     case SHOP: 
+/*  959 */       if (shopRelicPool.isEmpty()) {
+/*  960 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.UNCOMMON);
+/*      */       } else {
+/*  962 */         retVal = (String)shopRelicPool.remove(shopRelicPool.size() - 1);
+/*      */       }
+/*  964 */       break;
+/*      */     case BOSS: 
+/*  966 */       if (bossRelicPool.isEmpty()) {
+/*  967 */         retVal = "Red Circlet";
+/*      */       } else {
+/*  969 */         retVal = (String)bossRelicPool.remove(0);
+/*      */       }
+/*  971 */       break;
+/*      */     default: 
+/*  973 */       logger.info("Incorrect relic tier: " + tier.name() + " was called in returnEndRandomRelicKey()");
+/*      */     }
+/*      */     
+/*      */     
+/*      */ 
+/*  978 */     if (!RelicLibrary.getRelic(retVal).canSpawn()) {
+/*  979 */       return returnEndRandomRelicKey(tier);
+/*      */     }
+/*      */     
+/*  982 */     return retVal;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static String returnRandomRelicKey(AbstractRelic.RelicTier tier)
+/*      */   {
+/*  992 */     String retVal = null;
+/*      */     
+/*  994 */     switch (tier) {
+/*      */     case COMMON: 
+/*  996 */       if (commonRelicPool.isEmpty()) {
+/*  997 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.UNCOMMON);
+/*      */       } else {
+/*  999 */         retVal = (String)commonRelicPool.remove(0);
+/*      */       }
+/* 1001 */       break;
+/*      */     case UNCOMMON: 
+/* 1003 */       if (uncommonRelicPool.isEmpty()) {
+/* 1004 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.RARE);
+/*      */       } else {
+/* 1006 */         retVal = (String)uncommonRelicPool.remove(0);
+/*      */       }
+/* 1008 */       break;
+/*      */     case RARE: 
+/* 1010 */       if (rareRelicPool.isEmpty()) {
+/* 1011 */         retVal = "Circlet";
+/*      */       } else {
+/* 1013 */         retVal = (String)rareRelicPool.remove(0);
+/*      */       }
+/* 1015 */       break;
+/*      */     case SHOP: 
+/* 1017 */       if (shopRelicPool.isEmpty()) {
+/* 1018 */         retVal = returnRandomRelicKey(AbstractRelic.RelicTier.UNCOMMON);
+/*      */       } else {
+/* 1020 */         retVal = (String)shopRelicPool.remove(0);
+/*      */       }
+/* 1022 */       break;
+/*      */     case BOSS: 
+/* 1024 */       if (bossRelicPool.isEmpty()) {
+/* 1025 */         retVal = "Red Circlet";
+/*      */       } else {
+/* 1027 */         retVal = (String)bossRelicPool.remove(0);
+/*      */       }
+/* 1029 */       break;
+/*      */     default: 
+/* 1031 */       logger.info("Incorrect relic tier: " + tier.name() + " was called in returnRandomRelicKey()");
+/*      */     }
+/*      */     
+/*      */     
+/* 1035 */     if (!RelicLibrary.getRelic(retVal).canSpawn()) {
+/* 1036 */       return returnEndRandomRelicKey(tier);
+/*      */     }
+/*      */     
+/* 1039 */     return retVal;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static AbstractRelic.RelicTier returnRandomRelicTier()
+/*      */   {
+/* 1046 */     int roll = relicRng.random(0, 99);
+/* 1047 */     if (roll < commonRelicChance)
+/* 1048 */       return AbstractRelic.RelicTier.COMMON;
+/* 1049 */     if (roll < commonRelicChance + uncommonRelicChance) {
+/* 1050 */       return AbstractRelic.RelicTier.UNCOMMON;
+/*      */     }
+/* 1052 */     return AbstractRelic.RelicTier.RARE;
+/*      */   }
+/*      */   
+/*      */   public static AbstractPotion returnTotallyRandomPotion() {
+/* 1056 */     return PotionHelper.getRandomPotion();
+/*      */   }
+/*      */   
+/*      */   public static AbstractPotion returnRandomPotion() {
+/* 1060 */     return returnRandomPotion(false);
+/*      */   }
+/*      */   
+/*      */   public static AbstractPotion returnRandomPotion(boolean limited) {
+/* 1064 */     int roll = potionRng.random(0, 99);
+/* 1065 */     if (roll < PotionHelper.POTION_COMMON_CHANCE)
+/* 1066 */       return returnRandomPotion(AbstractPotion.PotionRarity.COMMON, limited);
+/* 1067 */     if (roll < PotionHelper.POTION_UNCOMMON_CHANCE + PotionHelper.POTION_COMMON_CHANCE) {
+/* 1068 */       return returnRandomPotion(AbstractPotion.PotionRarity.UNCOMMON, limited);
+/*      */     }
+/* 1070 */     return returnRandomPotion(AbstractPotion.PotionRarity.RARE, limited);
+/*      */   }
+/*      */   
+/*      */   public static AbstractPotion returnRandomPotion(AbstractPotion.PotionRarity rarity, boolean limited) {
+/* 1074 */     AbstractPotion temp = PotionHelper.getRandomPotion();
+/* 1075 */     boolean spamCheck = limited;
+/* 1076 */     while ((temp.rarity != rarity) || (spamCheck)) {
+/* 1077 */       spamCheck = limited;
+/* 1078 */       temp = PotionHelper.getRandomPotion();
+/* 1079 */       if (temp.ID != "Fruit Juice") {
+/* 1080 */         spamCheck = false;
+/*      */       }
+/*      */     }
+/* 1083 */     return temp;
+/*      */   }
+/*      */   
+/*      */   public static void transformCard(AbstractCard c) {
+/* 1087 */     transformCard(c, false);
+/*      */   }
+/*      */   
+/*      */   public static void transformCard(AbstractCard c, boolean autoUpgrade) {
+/* 1091 */     transformCard(c, autoUpgrade, new com.megacrit.cardcrawl.random.Random());
+/*      */   }
+/*      */   
+/*      */   public static void transformCard(AbstractCard c, boolean autoUpgrade, com.megacrit.cardcrawl.random.Random rng) {
+/* 1095 */     switch (c.color) {
+/*      */     case COLORLESS: 
+/* 1097 */       transformedCard = returnTrulyRandomColorlessCardFromAvailable(c, rng).makeCopy();
+/* 1098 */       break;
+/*      */     case CURSE: 
+/* 1100 */       transformedCard = CardLibrary.getCurse(c, rng).makeCopy();
+/* 1101 */       break;
+/*      */     default: 
+/* 1103 */       transformedCard = returnTrulyRandomCardFromAvailable(c, rng).makeCopy();
+/*      */     }
+/*      */     
+/*      */     
+/* 1107 */     UnlockTracker.markCardAsSeen(transformedCard.cardID);
+/*      */     
+/* 1109 */     if ((autoUpgrade) && (transformedCard.canUpgrade())) {
+/* 1110 */       transformedCard.upgrade();
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public static void srcTransformCard(AbstractCard c) {
+/* 1115 */     logger.info("Transform using SRC pool...");
+/* 1116 */     switch (c.rarity) {
+/*      */     case BASIC: 
+/* 1118 */       transformedCard = srcCommonCardPool.getRandomCard(false).makeCopy();
+/* 1119 */       break;
+/*      */     case COMMON: 
+/* 1121 */       srcCommonCardPool.removeCard(c.cardID);
+/* 1122 */       transformedCard = srcCommonCardPool.getRandomCard(false).makeCopy();
+/* 1123 */       srcCommonCardPool.addToTop(c.makeCopy());
+/* 1124 */       break;
+/*      */     case UNCOMMON: 
+/* 1126 */       srcUncommonCardPool.removeCard(c.cardID);
+/* 1127 */       transformedCard = srcUncommonCardPool.getRandomCard(false).makeCopy();
+/* 1128 */       srcUncommonCardPool.addToTop(c.makeCopy());
+/* 1129 */       break;
+/*      */     case RARE: 
+/* 1131 */       srcRareCardPool.removeCard(c.cardID);
+/* 1132 */       if (srcRareCardPool.isEmpty()) {
+/* 1133 */         transformedCard = srcUncommonCardPool.getRandomCard(false).makeCopy();
+/*      */       } else {
+/* 1135 */         transformedCard = srcRareCardPool.getRandomCard(false).makeCopy();
+/*      */       }
+/* 1137 */       srcRareCardPool.addToTop(c.makeCopy());
+/* 1138 */       break;
+/*      */     case CURSE: 
+/* 1140 */       if (!srcRareCardPool.isEmpty()) {
+/* 1141 */         transformedCard = srcRareCardPool.getRandomCard(false).makeCopy();
+/*      */       } else
+/* 1143 */         transformedCard = srcUncommonCardPool.getRandomCard(false).makeCopy();
+/*      */       break;
+/*      */     }
+/* 1146 */     logger.info("Transform called on a strange card type: " + c.type.name());
+/* 1147 */     transformedCard = srcCommonCardPool.getRandomCard(false).makeCopy();
+/*      */   }
+/*      */   
+/*      */   public static CardGroup getEachRare()
+/*      */   {
+/* 1152 */     CardGroup everyRareCard = new CardGroup(CardGroup.CardGroupType.UNSPECIFIED);
+/* 1153 */     for (AbstractCard c : rareCardPool.group) {
+/* 1154 */       everyRareCard.addToBottom(c.makeCopy());
+/*      */     }
+/* 1156 */     return everyRareCard;
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnRandomCard() {
+/* 1160 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1161 */     AbstractCard.CardRarity rarity = rollRarity();
+/* 1162 */     if (rarity.equals(AbstractCard.CardRarity.COMMON)) {
+/* 1163 */       list.addAll(srcCommonCardPool.group);
+/* 1164 */     } else if (rarity.equals(AbstractCard.CardRarity.UNCOMMON)) {
+/* 1165 */       list.addAll(srcUncommonCardPool.group);
+/*      */     } else {
+/* 1167 */       list.addAll(srcRareCardPool.group);
+/*      */     }
+/*      */     
+/* 1170 */     return (AbstractCard)list.get(cardRandomRng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomCard() {
+/* 1174 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1175 */     list.addAll(srcCommonCardPool.group);
+/* 1176 */     list.addAll(srcUncommonCardPool.group);
+/* 1177 */     list.addAll(srcRareCardPool.group);
+/* 1178 */     return (AbstractCard)list.get(cardRandomRng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractCard returnTrulyRandomCardInCombat()
+/*      */   {
+/* 1187 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1188 */     for (AbstractCard c : srcCommonCardPool.group) {
+/* 1189 */       if (!c.hasTag(AbstractCard.CardTags.HEALING)) {
+/* 1190 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1193 */     for (AbstractCard c : srcUncommonCardPool.group) {
+/* 1194 */       if (!c.hasTag(AbstractCard.CardTags.HEALING)) {
+/* 1195 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1198 */     for (AbstractCard c : srcRareCardPool.group) {
+/* 1199 */       if (!c.hasTag(AbstractCard.CardTags.HEALING)) {
+/* 1200 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1203 */     return (AbstractCard)list.get(cardRandomRng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomCardInCombat(AbstractCard.CardType type) {
+/* 1207 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1208 */     for (AbstractCard c : srcCommonCardPool.group) {
+/* 1209 */       if ((c.type == type) && (!c.hasTag(AbstractCard.CardTags.HEALING))) {
+/* 1210 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1213 */     for (AbstractCard c : srcUncommonCardPool.group) {
+/* 1214 */       if ((c.type == type) && (!c.hasTag(AbstractCard.CardTags.HEALING))) {
+/* 1215 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1218 */     for (AbstractCard c : srcRareCardPool.group) {
+/* 1219 */       if ((c.type == type) && (!c.hasTag(AbstractCard.CardTags.HEALING))) {
+/* 1220 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1223 */     return (AbstractCard)list.get(cardRandomRng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomColorlessCardInCombat() {
+/* 1227 */     return returnTrulyRandomColorlessCardInCombat(cardRandomRng);
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomColorlessCardInCombat(String prohibitedID) {
+/* 1231 */     return returnTrulyRandomColorlessCardFromAvailable(prohibitedID, cardRandomRng);
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomColorlessCardInCombat(com.megacrit.cardcrawl.random.Random rng) {
+/* 1235 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1236 */     for (AbstractCard c : srcColorlessCardPool.group) {
+/* 1237 */       if (!c.hasTag(AbstractCard.CardTags.HEALING)) {
+/* 1238 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1241 */     return (AbstractCard)list.get(rng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomColorlessCardFromAvailable(String prohibited, com.megacrit.cardcrawl.random.Random rng) {
+/* 1245 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1246 */     for (AbstractCard c : srcColorlessCardPool.group) {
+/* 1247 */       if (c.cardID != prohibited) {
+/* 1248 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1251 */     return (AbstractCard)list.get(rng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomColorlessCardFromAvailable(AbstractCard prohibited, com.megacrit.cardcrawl.random.Random rng) {
+/* 1255 */     ArrayList<AbstractCard> list = new ArrayList();
+/* 1256 */     for (AbstractCard c : srcColorlessCardPool.group) {
+/* 1257 */       if (!Objects.equals(c.cardID, prohibited.cardID)) {
+/* 1258 */         list.add(c);
+/*      */       }
+/*      */     }
+/* 1261 */     return (AbstractCard)list.get(rng.random(list.size() - 1));
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomCardFromAvailable(AbstractCard prohibited, com.megacrit.cardcrawl.random.Random rng) {
+/* 1265 */     ArrayList<AbstractCard> list = new ArrayList();
+/*      */     
+/* 1267 */     switch (prohibited.color) {
+/*      */     case COLORLESS: 
+/* 1269 */       for (AbstractCard c : colorlessCardPool.group) {
+/* 1270 */         if (!Objects.equals(c.cardID, prohibited.cardID)) {
+/* 1271 */           list.add(c);
+/*      */         }
+/*      */       }
+/* 1274 */       break;
+/*      */     case CURSE: 
+/* 1276 */       return CardLibrary.getCurse();
+/*      */     default: 
+/* 1278 */       for (AbstractCard c : commonCardPool.group) {
+/* 1279 */         if (!Objects.equals(c.cardID, prohibited.cardID)) {
+/* 1280 */           list.add(c);
+/*      */         }
+/*      */       }
+/* 1283 */       for (AbstractCard c : srcUncommonCardPool.group) {
+/* 1284 */         if (!Objects.equals(c.cardID, prohibited.cardID)) {
+/* 1285 */           list.add(c);
+/*      */         }
+/*      */       }
+/* 1288 */       for (AbstractCard c : srcRareCardPool.group) {
+/* 1289 */         if (!Objects.equals(c.cardID, prohibited.cardID)) {
+/* 1290 */           list.add(c);
+/*      */         }
+/*      */       }
+/*      */     }
+/*      */     
+/*      */     
+/* 1296 */     return ((AbstractCard)list.get(rng.random(list.size() - 1))).makeCopy();
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnTrulyRandomCardFromAvailable(AbstractCard prohibited) {
+/* 1300 */     return returnTrulyRandomCardFromAvailable(prohibited, new com.megacrit.cardcrawl.random.Random());
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard getTransformedCard() {
+/* 1304 */     AbstractCard retVal = transformedCard;
+/* 1305 */     transformedCard = null;
+/* 1306 */     return retVal;
+/*      */   }
+/*      */   
+/*      */   public void populateFirstStrongEnemy(ArrayList<MonsterInfo> monsters, ArrayList<String> exclusions) {
+/*      */     for (;;) {
+/* 1311 */       String m = MonsterInfo.roll(monsters, monsterRng.random());
+/* 1312 */       if (!exclusions.contains(m)) {
+/* 1313 */         monsterList.add(m);
+/* 1314 */         return;
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public void populateMonsterList(ArrayList<MonsterInfo> monsters, int numMonsters, boolean elites)
+/*      */   {
+/* 1321 */     if (elites) {
+/* 1322 */       for (int i = 0; i < numMonsters; i++) {
+/* 1323 */         if (eliteMonsterList.isEmpty()) {
+/* 1324 */           eliteMonsterList.add(MonsterInfo.roll(monsters, monsterRng.random()));
+/*      */         } else {
+/* 1326 */           String toAdd = MonsterInfo.roll(monsters, monsterRng.random());
+/* 1327 */           if (!toAdd.equals(eliteMonsterList.get(eliteMonsterList.size() - 1))) {
+/* 1328 */             eliteMonsterList.add(toAdd);
+/*      */           }
+/*      */           else {
+/* 1331 */             i--;
+/*      */           }
+/*      */         }
+/*      */       }
+/*      */     } else {
+/* 1336 */       for (int i = 0; i < numMonsters; i++) {
+/* 1337 */         if (monsterList.isEmpty()) {
+/* 1338 */           monsterList.add(MonsterInfo.roll(monsters, monsterRng.random()));
+/*      */         } else {
+/* 1340 */           String toAdd = MonsterInfo.roll(monsters, monsterRng.random());
+/* 1341 */           if (!toAdd.equals(monsterList.get(monsterList.size() - 1))) {
+/* 1342 */             if ((monsterList.size() > 1) && (toAdd.equals(monsterList.get(monsterList.size() - 2))))
+/*      */             {
+/* 1344 */               i--;
+/*      */             } else {
+/* 1346 */               monsterList.add(toAdd);
+/*      */             }
+/*      */           }
+/*      */           else {
+/* 1350 */             i--;
+/*      */           }
+/*      */         }
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract ArrayList<String> generateExclusions();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static AbstractCard returnColorlessCard(AbstractCard.CardRarity rarity)
+/*      */   {
+/* 1366 */     Collections.shuffle(colorlessCardPool.group, new java.util.Random(shuffleRng.randomLong()));
+/*      */     
+/*      */ 
+/* 1369 */     for (AbstractCard c : colorlessCardPool.group) {
+/* 1370 */       if (c.rarity == rarity) {
+/* 1371 */         return c.makeCopy();
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 1376 */     if (rarity == AbstractCard.CardRarity.RARE) {
+/* 1377 */       for (AbstractCard c : colorlessCardPool.group) {
+/* 1378 */         if (c.rarity == AbstractCard.CardRarity.UNCOMMON) {
+/* 1379 */           return c.makeCopy();
+/*      */         }
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 1385 */     return new SwiftStrike();
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnColorlessCard()
+/*      */   {
+/* 1390 */     Collections.shuffle(colorlessCardPool.group);
+/*      */     
+/*      */ 
+/* 1393 */     Iterator localIterator = colorlessCardPool.group.iterator(); if (localIterator.hasNext()) { AbstractCard c = (AbstractCard)localIterator.next();
+/* 1394 */       return c.makeCopy();
+/*      */     }
+/*      */     
+/*      */ 
+/* 1398 */     return new SwiftStrike();
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard returnRandomCurse() {
+/* 1402 */     AbstractCard c = CardLibrary.getCurse().makeCopy();
+/* 1403 */     UnlockTracker.markCardAsSeen(c.cardID);
+/* 1404 */     return c;
+/*      */   }
+/*      */   
+/*      */   public void initializePotions() {
+/* 1408 */     PotionHelper.initialize(player.chosenClass);
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public void initializeCardPools()
+/*      */   {
+/* 1415 */     logger.info("INIT CARD POOL");
+/* 1416 */     long startTime = System.currentTimeMillis();
+/*      */     
+/*      */ 
+/* 1419 */     commonCardPool.clear();
+/* 1420 */     uncommonCardPool.clear();
+/* 1421 */     rareCardPool.clear();
+/* 1422 */     colorlessCardPool.clear();
+/* 1423 */     curseCardPool.clear();
+/*      */     
+/* 1425 */     ArrayList<AbstractCard> tmpPool = new ArrayList();
+/* 1426 */     if (ModHelper.isModEnabled("Colorless Cards")) {
+/* 1427 */       CardLibrary.addColorlessCards(tmpPool);
+/*      */     }
+/* 1429 */     if (ModHelper.isModEnabled("Diverse")) {
+/* 1430 */       CardLibrary.addRedCards(tmpPool);
+/* 1431 */       CardLibrary.addGreenCards(tmpPool);
+/* 1432 */       CardLibrary.addBlueCards(tmpPool);
+/*      */     } else {
+/* 1434 */       player.getCardPool(tmpPool);
+/*      */     }
+/*      */     
+/*      */ 
+/* 1438 */     addColorlessCards();
+/*      */     
+/* 1440 */     addCurseCards();
+/*      */     
+/*      */ 
+/* 1443 */     for (AbstractCard c : tmpPool) {
+/* 1444 */       switch (c.rarity) {
+/*      */       case COMMON: 
+/* 1446 */         commonCardPool.addToTop(c);
+/* 1447 */         break;
+/*      */       case UNCOMMON: 
+/* 1449 */         uncommonCardPool.addToTop(c);
+/* 1450 */         break;
+/*      */       case RARE: 
+/* 1452 */         rareCardPool.addToTop(c);
+/* 1453 */         break;
+/*      */       case CURSE: 
+/* 1455 */         curseCardPool.addToTop(c);
+/* 1456 */         break;
+/*      */       default: 
+/* 1458 */         logger.info("Unspecified rarity: " + c.rarity
+/* 1459 */           .name() + " when creating pools! AbstractDungeon: Line 827");
+/*      */       }
+/*      */       
+/*      */     }
+/*      */     
+/*      */ 
+/* 1465 */     srcColorlessCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/* 1466 */     srcCurseCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/* 1467 */     srcRareCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/* 1468 */     srcUncommonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/* 1469 */     srcCommonCardPool = new CardGroup(CardGroup.CardGroupType.CARD_POOL);
+/*      */     
+/* 1471 */     for (AbstractCard c : colorlessCardPool.group) {
+/* 1472 */       srcColorlessCardPool.addToBottom(c);
+/*      */     }
+/* 1474 */     for (AbstractCard c : curseCardPool.group) {
+/* 1475 */       srcCurseCardPool.addToBottom(c);
+/*      */     }
+/* 1477 */     for (AbstractCard c : rareCardPool.group) {
+/* 1478 */       srcRareCardPool.addToBottom(c);
+/*      */     }
+/* 1480 */     for (AbstractCard c : uncommonCardPool.group) {
+/* 1481 */       srcUncommonCardPool.addToBottom(c);
+/*      */     }
+/* 1483 */     for (AbstractCard c : commonCardPool.group) {
+/* 1484 */       srcCommonCardPool.addToBottom(c);
+/*      */     }
+/*      */     
+/* 1487 */     logger.info("Cardpool load time: " + (System.currentTimeMillis() - startTime) + "ms");
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   private void addColorlessCards()
+/*      */   {
+/* 1495 */     for (Map.Entry<String, AbstractCard> c : CardLibrary.cards.entrySet()) {
+/* 1496 */       AbstractCard card = (AbstractCard)c.getValue();
+/* 1497 */       if ((card.color == AbstractCard.CardColor.COLORLESS) && (card.rarity != AbstractCard.CardRarity.BASIC) && (card.rarity != AbstractCard.CardRarity.SPECIAL) && (card.type != AbstractCard.CardType.STATUS))
+/*      */       {
+/* 1499 */         colorlessCardPool.addToTop(card);
+/*      */       }
+/*      */     }
+/* 1502 */     logger.info("COLORLESS CARDS: " + colorlessCardPool.size());
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   private void addCurseCards()
+/*      */   {
+/* 1510 */     for (Map.Entry<String, AbstractCard> c : CardLibrary.cards.entrySet()) {
+/* 1511 */       AbstractCard card = (AbstractCard)c.getValue();
+/* 1512 */       if ((card.type == AbstractCard.CardType.CURSE) && (!Objects.equals(card.cardID, "Necronomicurse")) && (!Objects.equals(card.cardID, "AscendersBane")))
+/*      */       {
+/* 1514 */         if (!Objects.equals(card.cardID, "Pride"))
+/* 1515 */           curseCardPool.addToTop(card);
+/*      */       }
+/*      */     }
+/* 1518 */     logger.info("CURSE CARDS: " + curseCardPool.size());
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   protected void initializeRelicList()
+/*      */   {
+/* 1525 */     commonRelicPool.clear();
+/* 1526 */     uncommonRelicPool.clear();
+/* 1527 */     rareRelicPool.clear();
+/* 1528 */     shopRelicPool.clear();
+/* 1529 */     bossRelicPool.clear();
+/*      */     
+/* 1531 */     RelicLibrary.populateRelicPool(commonRelicPool, AbstractRelic.RelicTier.COMMON, player.chosenClass);
+/* 1532 */     RelicLibrary.populateRelicPool(uncommonRelicPool, AbstractRelic.RelicTier.UNCOMMON, player.chosenClass);
+/* 1533 */     RelicLibrary.populateRelicPool(rareRelicPool, AbstractRelic.RelicTier.RARE, player.chosenClass);
+/* 1534 */     RelicLibrary.populateRelicPool(shopRelicPool, AbstractRelic.RelicTier.SHOP, player.chosenClass);
+/* 1535 */     RelicLibrary.populateRelicPool(bossRelicPool, AbstractRelic.RelicTier.BOSS, player.chosenClass);
+/*      */     
+/* 1537 */     if (floorNum >= 1) {
+/* 1538 */       for (AbstractRelic r : player.relics) {
+/* 1539 */         relicsToRemoveOnStart.add(r.relicId);
+/*      */       }
+/*      */     }
+/*      */     
+/* 1543 */     Collections.shuffle(commonRelicPool, new java.util.Random(relicRng.randomLong()));
+/* 1544 */     Collections.shuffle(uncommonRelicPool, new java.util.Random(relicRng.randomLong()));
+/* 1545 */     Collections.shuffle(rareRelicPool, new java.util.Random(relicRng.randomLong()));
+/* 1546 */     Collections.shuffle(shopRelicPool, new java.util.Random(relicRng.randomLong()));
+/* 1547 */     Collections.shuffle(bossRelicPool, new java.util.Random(relicRng.randomLong()));
+/*      */     
+/*      */ 
+/* 1550 */     if ((ModHelper.isModEnabled("Flight")) || (ModHelper.isModEnabled("Uncertain Future"))) {
+/* 1551 */       relicsToRemoveOnStart.add("WingedGreaves");
+/*      */     }
+/*      */     
+/* 1554 */     if (ModHelper.isModEnabled("Diverse")) {
+/* 1555 */       relicsToRemoveOnStart.add("PrismaticShard");
+/*      */     }
+/*      */     
+/* 1558 */     if (ModHelper.isModEnabled("DeadlyEvents")) {
+/* 1559 */       relicsToRemoveOnStart.add("Juzu Bracelet");
+/*      */     }
+/*      */     
+/* 1562 */     if (ModHelper.isModEnabled("Hoarder")) {
+/* 1563 */       relicsToRemoveOnStart.add("Smiling Mask");
+/*      */     }
+/*      */     
+/* 1566 */     if ((ModHelper.isModEnabled("Draft")) || (ModHelper.isModEnabled("SealedDeck")) || (ModHelper.isModEnabled("Shiny")) || 
+/* 1567 */       (ModHelper.isModEnabled("Insanity")))
+/*      */     {
+/* 1569 */       relicsToRemoveOnStart.add("Pandora's Box");
+/*      */     }
+/*      */     
+/*      */ 
+/* 1573 */     for (??? = relicsToRemoveOnStart.iterator(); ???.hasNext();) { remove = (String)???.next();
+/* 1574 */       for (Iterator<String> s = commonRelicPool.iterator(); s.hasNext();) {
+/* 1575 */         String derp = (String)s.next();
+/* 1576 */         if (derp.equals(remove)) {
+/* 1577 */           s.remove();
+/* 1578 */           logger.info(derp + " removed.");
+/* 1579 */           break;
+/*      */         }
+/*      */       }
+/* 1582 */       for (Iterator<String> s = uncommonRelicPool.iterator(); s.hasNext();) {
+/* 1583 */         String derp = (String)s.next();
+/* 1584 */         if (derp.equals(remove)) {
+/* 1585 */           s.remove();
+/* 1586 */           logger.info(derp + " removed.");
+/* 1587 */           break;
+/*      */         }
+/*      */       }
+/* 1590 */       for (Iterator<String> s = rareRelicPool.iterator(); s.hasNext();) {
+/* 1591 */         String derp = (String)s.next();
+/* 1592 */         if (derp.equals(remove)) {
+/* 1593 */           s.remove();
+/* 1594 */           logger.info(derp + " removed.");
+/* 1595 */           break;
+/*      */         }
+/*      */       }
+/* 1598 */       for (Iterator<String> s = bossRelicPool.iterator(); s.hasNext();) {
+/* 1599 */         String derp = (String)s.next();
+/* 1600 */         if (derp.equals(remove)) {
+/* 1601 */           s.remove();
+/* 1602 */           logger.info(derp + " removed.");
+/* 1603 */           break;
+/*      */         }
+/*      */       }
+/* 1606 */       for (s = shopRelicPool.iterator(); s.hasNext();) {
+/* 1607 */         String derp = (String)s.next();
+/* 1608 */         if (derp.equals(remove)) {
+/* 1609 */           s.remove();
+/* 1610 */           logger.info(derp + " removed.");
+/* 1611 */           break;
+/*      */         }
+/*      */       } }
+/*      */     String remove;
+/*      */     Iterator<String> s;
+/* 1616 */     if (Settings.isDebug) {
+/* 1617 */       logger.info("Relic (Common):");
+/* 1618 */       for (String s : commonRelicPool) {
+/* 1619 */         logger.info(" " + s);
+/*      */       }
+/*      */       
+/* 1622 */       logger.info("Relic (Uncommon):");
+/* 1623 */       for (String s : uncommonRelicPool) {
+/* 1624 */         logger.info(" " + s);
+/*      */       }
+/*      */       
+/* 1627 */       logger.info("Relic (Rare):");
+/* 1628 */       for (String s : rareRelicPool) {
+/* 1629 */         logger.info(" " + s);
+/*      */       }
+/*      */       
+/* 1632 */       logger.info("Relic (Shop):");
+/* 1633 */       for (String s : shopRelicPool) {
+/* 1634 */         logger.info(" " + s);
+/*      */       }
+/*      */       
+/* 1637 */       logger.info("Relic (Boss):");
+/* 1638 */       for (String s : bossRelicPool) {
+/* 1639 */         logger.info(" " + s);
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract void generateMonsters();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract void generateWeakEnemies(int paramInt);
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract void generateStrongEnemies(int paramInt);
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract void generateElites(int paramInt);
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   protected abstract void initializeBoss();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   protected abstract void initializeEventList();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   protected abstract void initializeEventImg();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   protected abstract void initializeShrineList();
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public void initializeSpecialOneTimeEventList()
+/*      */   {
+/* 1685 */     specialOneTimeEventList.clear();
+/* 1686 */     specialOneTimeEventList.add("Accursed Blacksmith");
+/* 1687 */     specialOneTimeEventList.add("Bonfire Elementals");
+/* 1688 */     specialOneTimeEventList.add("Designer");
+/* 1689 */     specialOneTimeEventList.add("Duplicator");
+/* 1690 */     specialOneTimeEventList.add("FaceTrader");
+/* 1691 */     specialOneTimeEventList.add("Fountain of Cleansing");
+/* 1692 */     specialOneTimeEventList.add("Knowing Skull");
+/* 1693 */     specialOneTimeEventList.add("Lab");
+/* 1694 */     specialOneTimeEventList.add("N'loth");
+/* 1695 */     if (isNoteForYourselfAvailable()) {
+/* 1696 */       specialOneTimeEventList.add("NoteForYourself");
+/*      */     }
+/* 1698 */     specialOneTimeEventList.add("SecretPortal");
+/* 1699 */     specialOneTimeEventList.add("The Joust");
+/* 1700 */     specialOneTimeEventList.add("WeMeetAgain");
+/* 1701 */     specialOneTimeEventList.add("The Woman in Blue");
+/*      */   }
+/*      */   
+/*      */   private boolean isNoteForYourselfAvailable() {
+/* 1705 */     if (Settings.isDailyRun) {
+/* 1706 */       logger.info("Note For Yourself is disabled due to Daily Run");
+/* 1707 */       return false;
+/*      */     }
+/*      */     
+/* 1710 */     if (ascensionLevel >= 15) {
+/* 1711 */       logger.info("Note For Yourself is disabled beyond Ascension 15+");
+/* 1712 */       return false;
+/*      */     }
+/*      */     
+/* 1715 */     if (ascensionLevel == 0) {
+/* 1716 */       logger.info("Note For Yourself is enabled due to No Ascension");
+/* 1717 */       return true;
+/*      */     }
+/*      */     
+/* 1720 */     if (ascensionLevel < player.getPrefs().getInteger("ASCENSION_LEVEL")) {
+/* 1721 */       logger.info("Note For Yourself is enabled as it's less than Highest Unlocked Ascension");
+/* 1722 */       return true;
+/*      */     }
+/*      */     
+/* 1725 */     logger.info("Note For Yourself is disabled as requirements aren't met");
+/* 1726 */     return false;
+/*      */   }
+/*      */   
+/*      */   public static ArrayList<AbstractCard> getColorlessRewardCards()
+/*      */   {
+/* 1731 */     ArrayList<AbstractCard> retVal = new ArrayList();
+/*      */     
+/* 1733 */     int numCards = 3;
+/* 1734 */     if (player.hasRelic("Question Card")) {
+/* 1735 */       numCards++;
+/*      */     }
+/*      */     
+/* 1738 */     if (player.hasRelic("Busted Crown")) {
+/* 1739 */       numCards -= 2;
+/*      */     }
+/*      */     
+/* 1742 */     if (ModHelper.isModEnabled("Binary")) {
+/* 1743 */       numCards--;
+/*      */     }
+/*      */     
+/*      */     AbstractCard.CardRarity rarity;
+/* 1747 */     for (int i = 0; i < numCards; i++) {
+/* 1748 */       rarity = rollRareOrUncommon(colorlessRareChance);
+/* 1749 */       AbstractCard card = null;
+/* 1750 */       switch (rarity) {
+/*      */       case RARE: 
+/* 1752 */         card = getColorlessCardFromPool(rarity);
+/* 1753 */         cardBlizzRandomizer = cardBlizzStartOffset;
+/* 1754 */         break;
+/*      */       case UNCOMMON: 
+/* 1756 */         card = getColorlessCardFromPool(rarity);
+/* 1757 */         break;
+/*      */       default: 
+/* 1759 */         logger.info("WTF?");
+/*      */       }
+/*      */       
+/*      */       
+/*      */ 
+/*      */ 
+/*      */ 
+/* 1766 */       int dupeCount = 0;
+/* 1767 */       while (retVal.contains(card)) {
+/* 1768 */         if (card != null) {
+/* 1769 */           logger.info("DUPE: " + card.originalName);
+/*      */         }
+/* 1771 */         if (dupeCount < 4) {
+/* 1772 */           card = getColorlessCardFromPool(rarity);
+/*      */         } else {
+/* 1774 */           logger.info("FALLBACK FOR CARD RARITY HAS OCCURRED");
+/*      */           
+/* 1776 */           switch (rarity) {
+/*      */           case RARE: 
+/* 1778 */             card = getColorlessCardFromPool(AbstractCard.CardRarity.UNCOMMON);
+/* 1779 */             break;
+/*      */           case UNCOMMON: 
+/* 1781 */             card = getColorlessCardFromPool(AbstractCard.CardRarity.RARE);
+/*      */           }
+/*      */           
+/*      */         }
+/*      */       }
+/*      */       
+/*      */ 
+/* 1788 */       if (card != null) {
+/* 1789 */         retVal.add(card);
+/*      */       }
+/*      */     }
+/*      */     
+/* 1793 */     ArrayList<AbstractCard> retVal2 = new ArrayList();
+/* 1794 */     for (AbstractCard c : retVal) {
+/* 1795 */       retVal2.add(c.makeCopy());
+/*      */     }
+/*      */     
+/* 1798 */     return retVal2;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static ArrayList<AbstractCard> getRewardCards()
+/*      */   {
+/* 1805 */     ArrayList<AbstractCard> retVal = new ArrayList();
+/*      */     
+/* 1807 */     int numCards = 3;
+/*      */     
+/* 1809 */     if (player.hasRelic("Question Card")) {
+/* 1810 */       numCards++;
+/*      */     }
+/*      */     
+/* 1813 */     if (player.hasRelic("Busted Crown")) {
+/* 1814 */       numCards -= 2;
+/*      */     }
+/*      */     
+/* 1817 */     if (ModHelper.isModEnabled("Binary")) {
+/* 1818 */       numCards--;
+/*      */     }
+/*      */     
+/*      */     AbstractCard.CardRarity rarity;
+/* 1822 */     for (int i = 0; i < numCards; i++) {
+/* 1823 */       rarity = rollRarity();
+/*      */       AbstractCard card;
+/*      */       AbstractCard card;
+/* 1826 */       if (player.hasRelic("PrismaticShard")) {
+/* 1827 */         card = CardLibrary.getAnyColorCard(rarity);
+/*      */       } else {
+/* 1829 */         card = getCard(rarity);
+/*      */       }
+/*      */       
+/* 1832 */       switch (rarity) {
+/*      */       case RARE: 
+/* 1834 */         cardBlizzRandomizer = cardBlizzStartOffset;
+/* 1835 */         break;
+/*      */       case UNCOMMON: 
+/*      */         break;
+/*      */       case COMMON: 
+/* 1839 */         cardBlizzRandomizer -= cardBlizzGrowth;
+/* 1840 */         if (cardBlizzRandomizer <= cardBlizzMaxOffset) {
+/* 1841 */           cardBlizzRandomizer = cardBlizzMaxOffset;
+/*      */         }
+/*      */         break;
+/*      */       default: 
+/* 1845 */         logger.info("WTF?");
+/*      */       }
+/*      */       
+/*      */       
+/*      */ 
+/*      */ 
+/*      */ 
+/* 1852 */       int dupeCount = 0;
+/* 1853 */       while (retVal.contains(card)) {
+/* 1854 */         if (card != null) {
+/* 1855 */           logger.info("DUPE: " + card.originalName);
+/*      */         }
+/* 1857 */         if (dupeCount < 4) {
+/* 1858 */           if (player.hasRelic("PrismaticShard")) {
+/* 1859 */             card = CardLibrary.getAnyColorCard(rarity);
+/*      */           } else {
+/* 1861 */             card = getCard(rarity);
+/*      */           }
+/*      */         } else {
+/* 1864 */           logger.info("FALLBACK FOR CARD RARITY HAS OCCURRED");
+/*      */           
+/* 1866 */           switch (rarity) {
+/*      */           case RARE: 
+/* 1868 */             if (player.hasRelic("PrismaticShard")) {
+/* 1869 */               card = CardLibrary.getAnyColorCard(AbstractCard.CardRarity.UNCOMMON);
+/*      */             } else {
+/* 1871 */               card = getCard(AbstractCard.CardRarity.UNCOMMON);
+/*      */             }
+/* 1873 */             break;
+/*      */           case UNCOMMON: 
+/* 1875 */             if (player.hasRelic("PrismaticShard")) {
+/* 1876 */               card = CardLibrary.getAnyColorCard(AbstractCard.CardRarity.COMMON);
+/*      */             } else {
+/* 1878 */               card = getCard(AbstractCard.CardRarity.COMMON);
+/*      */             }
+/* 1880 */             break;
+/*      */           case COMMON: 
+/* 1882 */             if (player.hasRelic("PrismaticShard")) {
+/* 1883 */               card = CardLibrary.getAnyColorCard(AbstractCard.CardRarity.UNCOMMON);
+/*      */             } else {
+/* 1885 */               card = getCard(AbstractCard.CardRarity.UNCOMMON);
+/*      */             }
+/* 1887 */             break;
+/*      */           default: 
+/* 1889 */             if (player.hasRelic("PrismaticShard")) {
+/* 1890 */               card = CardLibrary.getAnyColorCard(AbstractCard.CardRarity.COMMON);
+/*      */             } else {
+/* 1892 */               card = getCard(AbstractCard.CardRarity.COMMON);
+/*      */             }
+/*      */             break;
+/*      */           }
+/*      */           
+/*      */         }
+/*      */       }
+/* 1899 */       if (card != null) {
+/* 1900 */         retVal.add(card);
+/*      */       }
+/*      */     }
+/*      */     
+/* 1904 */     ArrayList<AbstractCard> retVal2 = new ArrayList();
+/* 1905 */     for (AbstractCard c : retVal) {
+/* 1906 */       retVal2.add(c.makeCopy());
+/*      */     }
+/*      */     
+/* 1909 */     for (AbstractCard c : retVal2) {
+/* 1910 */       if ((c.rarity != AbstractCard.CardRarity.RARE) && (cardRng.randomBoolean(cardUpgradedChance)) && (c.canUpgrade())) {
+/* 1911 */         c.upgrade();
+/*      */       }
+/* 1913 */       else if ((c.type == AbstractCard.CardType.ATTACK) && (player.hasRelic("Molten Egg 2"))) {
+/* 1914 */         c.upgrade();
+/* 1915 */       } else if ((c.type == AbstractCard.CardType.SKILL) && (player.hasRelic("Toxic Egg 2"))) {
+/* 1916 */         c.upgrade();
+/* 1917 */       } else if ((c.type == AbstractCard.CardType.POWER) && (player.hasRelic("Frozen Egg 2"))) {
+/* 1918 */         c.upgrade();
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 1923 */     return retVal2;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractCard getCard(AbstractCard.CardRarity rarity)
+/*      */   {
+/* 1933 */     switch (rarity) {
+/*      */     case RARE: 
+/* 1935 */       return rareCardPool.getRandomCard(true);
+/*      */     case UNCOMMON: 
+/* 1937 */       return uncommonCardPool.getRandomCard(true);
+/*      */     case COMMON: 
+/* 1939 */       return commonCardPool.getRandomCard(true);
+/*      */     case CURSE: 
+/* 1941 */       return curseCardPool.getRandomCard(true);
+/*      */     }
+/* 1943 */     logger.info("No rarity on getCard in Abstract Dungeon");
+/* 1944 */     return null;
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard getCard(AbstractCard.CardRarity rarity, com.megacrit.cardcrawl.random.Random rng)
+/*      */   {
+/* 1949 */     switch (rarity) {
+/*      */     case RARE: 
+/* 1951 */       return rareCardPool.getRandomCard(rng);
+/*      */     case UNCOMMON: 
+/* 1953 */       return uncommonCardPool.getRandomCard(rng);
+/*      */     case COMMON: 
+/* 1955 */       return commonCardPool.getRandomCard(rng);
+/*      */     case CURSE: 
+/* 1957 */       return curseCardPool.getRandomCard(rng);
+/*      */     }
+/* 1959 */     logger.info("No rarity on getCard in Abstract Dungeon");
+/* 1960 */     return null;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractCard getCardWithoutRng(AbstractCard.CardRarity rarity)
+/*      */   {
+/* 1971 */     switch (rarity) {
+/*      */     case RARE: 
+/* 1973 */       return rareCardPool.getRandomCard(false);
+/*      */     case UNCOMMON: 
+/* 1975 */       return uncommonCardPool.getRandomCard(false);
+/*      */     case COMMON: 
+/* 1977 */       return commonCardPool.getRandomCard(false);
+/*      */     case CURSE: 
+/* 1979 */       return returnRandomCurse();
+/*      */     }
+/* 1981 */     logger.info("Check getCardWithoutRng");
+/* 1982 */     return null;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractCard getCardFromPool(AbstractCard.CardRarity rarity, AbstractCard.CardType type, boolean useRng)
+/*      */   {
+/* 1994 */     switch (rarity) {
+/*      */     case RARE: 
+/* 1996 */       AbstractCard retVal = rareCardPool.getRandomCard(type, useRng);
+/* 1997 */       if (retVal != null) {
+/* 1998 */         return retVal;
+/*      */       }
+/* 2000 */       logger.info("ERROR: Could not find Rare card of type: " + type.name());
+/*      */     case UNCOMMON: 
+/* 2002 */       AbstractCard retVal = uncommonCardPool.getRandomCard(type, useRng);
+/* 2003 */       if (retVal != null) {
+/* 2004 */         return retVal;
+/*      */       }
+/*      */       
+/*      */ 
+/* 2008 */       if (type == AbstractCard.CardType.POWER) {
+/* 2009 */         return getCardFromPool(AbstractCard.CardRarity.RARE, type, useRng);
+/*      */       }
+/*      */       
+/* 2012 */       logger.info("ERROR: Could not find Uncommon card of type: " + type.name());
+/*      */     case COMMON: 
+/* 2014 */       AbstractCard retVal = commonCardPool.getRandomCard(type, useRng);
+/* 2015 */       if (retVal != null) {
+/* 2016 */         return retVal;
+/*      */       }
+/*      */       
+/*      */ 
+/* 2020 */       if (type == AbstractCard.CardType.POWER) {
+/* 2021 */         return getCardFromPool(AbstractCard.CardRarity.UNCOMMON, type, useRng);
+/*      */       }
+/*      */       
+/* 2024 */       logger.info("ERROR: Could not find Common card of type: " + type.name());
+/*      */     case CURSE: 
+/* 2026 */       AbstractCard retVal = curseCardPool.getRandomCard(type, useRng);
+/* 2027 */       if (retVal != null) {
+/* 2028 */         return retVal;
+/*      */       }
+/*      */       
+/* 2031 */       logger.info("ERROR: Could not find Curse card of type: " + type.name());
+/*      */     }
+/* 2033 */     logger.info("ERROR: Default in getCardFromPool");
+/* 2034 */     return null;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */   public static AbstractCard getColorlessCardFromPool(AbstractCard.CardRarity rarity)
+/*      */   {
+/* 2040 */     switch (rarity) {
+/*      */     case RARE: 
+/* 2042 */       AbstractCard retVal = colorlessCardPool.getRandomCard(true, rarity);
+/* 2043 */       if (retVal != null) {
+/* 2044 */         return retVal;
+/*      */       }
+/*      */     case UNCOMMON: 
+/* 2047 */       AbstractCard retVal = colorlessCardPool.getRandomCard(true, rarity);
+/* 2048 */       if (retVal != null)
+/* 2049 */         return retVal;
+/*      */       break;
+/*      */     }
+/* 2052 */     logger.info("ERROR: getColorlessCardFromPool");
+/* 2053 */     return null;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static void removeCardFromPool(String id, String name, AbstractCard.CardRarity rarity, AbstractCard.CardColor color)
+/*      */   {
+/* 2065 */     if ((color != AbstractCard.CardColor.COLORLESS) && (color != AbstractCard.CardColor.CURSE)) {}
+/* 2066 */     Iterator<AbstractCard> i; Iterator<AbstractCard> i; Iterator<AbstractCard> i; switch (rarity) {
+/*      */     case RARE: 
+/* 2068 */       for (i = rareCardPool.group.iterator(); i.hasNext();) {
+/* 2069 */         AbstractCard e = (AbstractCard)i.next();
+/* 2070 */         if (e.cardID.equals(id)) {
+/* 2071 */           i.remove();
+/* 2072 */           logger.info(name + " removed from pool.");
+/* 2073 */           return;
+/*      */         }
+/*      */       }
+/* 2076 */       break;
+/*      */     case UNCOMMON: 
+/* 2078 */       for (i = uncommonCardPool.group.iterator(); i.hasNext();) {
+/* 2079 */         AbstractCard e = (AbstractCard)i.next();
+/* 2080 */         if (e.cardID.equals(id)) {
+/* 2081 */           i.remove();
+/* 2082 */           logger.info(name + " removed from pool.");
+/* 2083 */           return;
+/*      */         }
+/*      */       }
+/* 2086 */       break;
+/*      */     case COMMON: 
+/* 2088 */       for (i = commonCardPool.group.iterator(); i.hasNext();) {
+/* 2089 */         AbstractCard e = (AbstractCard)i.next();
+/* 2090 */         if (e.cardID.equals(id)) {
+/* 2091 */           i.remove();
+/* 2092 */           logger.info(name + " removed from pool.");
+/* 2093 */           return;
+/*      */         }
+/*      */       }
+/* 2096 */       break;
+/*      */     default: 
+/* 2098 */       logger.info("ERROR: Rarity incorrectly specified: " + rarity.name());
+/* 2099 */       break;
+/*      */       Iterator<AbstractCard> i;
+/* 2101 */       if (color == AbstractCard.CardColor.COLORLESS) {
+/* 2102 */         for (i = colorlessCardPool.group.iterator(); i.hasNext();) {
+/* 2103 */           AbstractCard e = (AbstractCard)i.next();
+/* 2104 */           if (e.cardID.equals(id)) {
+/* 2105 */             i.remove();
+/* 2106 */             logger.info(name + " removed from pool."); return;
+/*      */           }
+/*      */         }
+/*      */       } else { Iterator<AbstractCard> i;
+/* 2110 */         if (color == AbstractCard.CardColor.CURSE) {
+/* 2111 */           for (i = curseCardPool.group.iterator(); i.hasNext();) {
+/* 2112 */             AbstractCard e = (AbstractCard)i.next();
+/* 2113 */             if (e.cardID.equals(id)) {
+/* 2114 */               i.remove();
+/* 2115 */               logger.info(name + " removed from pool."); return;
+/*      */             }
+/*      */             
+/*      */           }
+/*      */         } else
+/* 2120 */           logger.info("ERROR: Somebody used removeCardFromPool() incorrectly!!");
+/*      */       }
+/*      */       break; }
+/*      */   }
+/*      */   
+/* 2125 */   public static AbstractCard.CardRarity rollRarity(com.megacrit.cardcrawl.random.Random rng) { int roll = cardRng.random(99);
+/* 2126 */     roll += cardBlizzRandomizer;
+/*      */     
+/* 2128 */     if (currMapNode == null) {
+/* 2129 */       return getCardRarityFallback(roll);
+/*      */     }
+/* 2131 */     return getCurrRoom().getCardRarity(roll);
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   private static AbstractCard.CardRarity getCardRarityFallback(int roll)
+/*      */   {
+/* 2143 */     int rareRate = 3;
+/* 2144 */     if (roll < rareRate)
+/* 2145 */       return AbstractCard.CardRarity.RARE;
+/* 2146 */     if (roll < 40) {
+/* 2147 */       return AbstractCard.CardRarity.UNCOMMON;
+/*      */     }
+/* 2149 */     return AbstractCard.CardRarity.COMMON;
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard.CardRarity rollRarity() {
+/* 2153 */     return rollRarity(cardRng);
+/*      */   }
+/*      */   
+/*      */   public static AbstractCard.CardRarity rollRareOrUncommon(float rareChance) {
+/* 2157 */     if (cardRng.randomBoolean(rareChance)) {
+/* 2158 */       return AbstractCard.CardRarity.RARE;
+/*      */     }
+/* 2160 */     return AbstractCard.CardRarity.UNCOMMON;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractMonster getRandomMonster()
+/*      */   {
+/* 2170 */     return currMapNode.room.monsters.getRandomMonster(null, true, cardRandomRng);
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static AbstractMonster getRandomMonster(AbstractMonster except)
+/*      */   {
+/* 2180 */     return currMapNode.room.monsters.getRandomMonster(except, true, cardRandomRng);
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static void nextRoomTransitionStart()
+/*      */   {
+/* 2187 */     fadeOut();
+/* 2188 */     waitingOnFadeOut = true;
+/* 2189 */     overlayMenu.proceedButton.hide();
+/* 2190 */     if (ModHelper.isModEnabled("Terminal")) {
+/* 2191 */       player.decreaseMaxHealth(1);
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public static void initializeFirstRoom() {
+/* 2196 */     fadeIn();
+/*      */     
+/*      */ 
+/* 2199 */     floorNum += 1;
+/* 2200 */     if ((currMapNode.room instanceof MonsterRoom)) {
+/* 2201 */       if (!CardCrawlGame.loadingSave) {
+/* 2202 */         if (SaveHelper.shouldSave()) {
+/* 2203 */           SaveHelper.saveIfAppropriate(SaveFile.SaveType.ENTER_ROOM);
+/*      */         }
+/*      */         else {
+/* 2206 */           Metrics metrics = new Metrics();
+/* 2207 */           metrics.setValues(false, false, null, Metrics.MetricRequestType.NONE);
+/* 2208 */           metrics.gatherAllDataAndSave(false, false, null);
+/*      */         }
+/*      */       }
+/* 2211 */       floorNum -= 1;
+/*      */     }
+/*      */     
+/*      */ 
+/* 2215 */     scene.nextRoom(currMapNode.room);
+/*      */   }
+/*      */   
+/*      */   public static void resetPlayer()
+/*      */   {
+/* 2220 */     player.orbs.clear();
+/* 2221 */     player.animX = 0.0F;
+/* 2222 */     player.animY = 0.0F;
+/* 2223 */     player.hideHealthBar();
+/* 2224 */     player.hand.clear();
+/* 2225 */     player.powers.clear();
+/* 2226 */     player.drawPile.clear();
+/* 2227 */     player.discardPile.clear();
+/* 2228 */     player.exhaustPile.clear();
+/* 2229 */     player.limbo.clear();
+/* 2230 */     player.loseBlock(true);
+/* 2231 */     player.damagedThisCombat = 0;
+/* 2232 */     GameActionManager.turn = 1;
+/*      */   }
+/*      */   
+/*      */   public void nextRoomTransition() {
+/* 2236 */     nextRoomTransition(null);
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public void nextRoomTransition(SaveFile saveFile)
+/*      */   {
+/* 2243 */     overlayMenu.proceedButton.setLabel(TEXT[0]);
+/* 2244 */     sceneOffsetTimer = 1.3F;
+/* 2245 */     combatRewardScreen.clear();
+/*      */     
+/* 2247 */     if ((nextRoom != null) && (nextRoom.room != null)) {
+/* 2248 */       nextRoom.room.rewards.clear();
+/*      */     }
+/*      */     AbstractCard tmpCard;
+/* 2251 */     if ((getCurrRoom() instanceof MonsterRoomElite)) {
+/* 2252 */       if (!eliteMonsterList.isEmpty()) {
+/* 2253 */         logger.info("Removing elite: " + (String)eliteMonsterList.get(0) + " from monster list.");
+/* 2254 */         eliteMonsterList.remove(0);
+/*      */       } else {
+/* 2256 */         generateElites(10);
+/*      */       }
+/* 2258 */     } else if ((getCurrRoom() instanceof MonsterRoom)) {
+/* 2259 */       if (!monsterList.isEmpty()) {
+/* 2260 */         logger.info("Removing monster: " + (String)monsterList.get(0) + " from monster list.");
+/* 2261 */         monsterList.remove(0);
+/*      */       } else {
+/* 2263 */         generateStrongEnemies(12);
+/*      */       }
+/* 2265 */     } else if (((getCurrRoom() instanceof EventRoom)) && 
+/* 2266 */       ((getCurrRoom().event instanceof NoteForYourself))) {
+/* 2267 */       tmpCard = ((NoteForYourself)getCurrRoom().event).saveCard;
+/* 2268 */       if (tmpCard != null) {
+/* 2269 */         CardCrawlGame.playerPref.putString("NOTE_CARD", tmpCard.cardID);
+/* 2270 */         CardCrawlGame.playerPref.putInteger("NOTE_UPGRADE", tmpCard.timesUpgraded);
+/* 2271 */         CardCrawlGame.playerPref.flush();
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 2276 */     getCurrRoom().clearEvent();
+/* 2277 */     gridSelectScreen.upgradePreviewCard = null;
+/* 2278 */     previousScreen = null;
+/* 2279 */     dynamicBanner.hide();
+/* 2280 */     dungeonMapScreen.closeInstantly();
+/* 2281 */     closeCurrentScreen();
+/* 2282 */     topPanel.unhoverHitboxes();
+/* 2283 */     fadeIn();
+/* 2284 */     player.resetControllerValues();
+/* 2285 */     effectList.clear();
+/* 2286 */     topLevelEffects.clear();
+/* 2287 */     topLevelEffectsQueue.clear();
+/* 2288 */     effectsQueue.clear();
+/* 2289 */     dungeonMapScreen.dismissable = true;
+/* 2290 */     dungeonMapScreen.map.legend.isLegendHighlighted = false;
+/*      */     
+/* 2292 */     resetPlayer();
+/*      */     
+/* 2294 */     if (!CardCrawlGame.loadingSave) {
+/* 2295 */       incrementFloorBasedMetrics();
+/* 2296 */       floorNum += 1;
+/* 2297 */       if ((!((Boolean)TipTracker.tips.get("INTENT_TIP")).booleanValue()) && (floorNum == 6)) {
+/* 2298 */         TipTracker.neverShowAgain("INTENT_TIP");
+/*      */       }
+/*      */       
+/* 2301 */       StatsScreen.incrementFloorClimbed();
+/* 2302 */       SaveHelper.saveIfAppropriate(SaveFile.SaveType.ENTER_ROOM);
+/*      */     }
+/*      */     
+/* 2305 */     monsterHpRng = new com.megacrit.cardcrawl.random.Random(Long.valueOf(Settings.seed.longValue() + floorNum));
+/* 2306 */     aiRng = new com.megacrit.cardcrawl.random.Random(Long.valueOf(Settings.seed.longValue() + floorNum));
+/* 2307 */     shuffleRng = new com.megacrit.cardcrawl.random.Random(Long.valueOf(Settings.seed.longValue() + floorNum));
+/* 2308 */     cardRandomRng = new com.megacrit.cardcrawl.random.Random(Long.valueOf(Settings.seed.longValue() + floorNum));
+/* 2309 */     miscRng = new com.megacrit.cardcrawl.random.Random(Long.valueOf(Settings.seed.longValue() + floorNum));
+/*      */     
+/* 2311 */     if (nextRoom != null) {
+/* 2312 */       for (AbstractRelic r : player.relics) {
+/* 2313 */         r.onEnterRoom(nextRoom.room);
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 2318 */     if (!actionManager.actions.isEmpty()) {
+/* 2319 */       logger.info("[WARNING] Line:1904: Action Manager was NOT clear! Clearing");
+/* 2320 */       actionManager.clear();
+/*      */     }
+/*      */     
+/* 2323 */     boolean isLoadingPostCombatSave = (CardCrawlGame.loadingSave) && (saveFile != null) && (saveFile.post_combat);
+/* 2324 */     boolean isLoadingCompletedEvent = false;
+/* 2325 */     String roomMetricKey; if (nextRoom != null) {
+/* 2326 */       roomMetricKey = nextRoom.room.getMapSymbol();
+/* 2327 */       if ((nextRoom.room instanceof EventRoom))
+/*      */       {
+/*      */ 
+/*      */ 
+/*      */ 
+/* 2332 */         com.megacrit.cardcrawl.random.Random eventRngDuplicate = new com.megacrit.cardcrawl.random.Random(Settings.seed, eventRng.counter);
+/* 2333 */         EventHelper.RoomResult roomResult = EventHelper.roll(eventRngDuplicate);
+/*      */         
+/* 2335 */         isLoadingCompletedEvent = (isLoadingPostCombatSave) && (roomResult == EventHelper.RoomResult.EVENT);
+/* 2336 */         if (!isLoadingCompletedEvent)
+/*      */         {
+/* 2338 */           eventRng = eventRngDuplicate;
+/* 2339 */           nextRoom.room = generateRoom(roomResult);
+/*      */         }
+/*      */         
+/* 2342 */         roomMetricKey = nextRoom.room.getMapSymbol();
+/*      */         
+/* 2344 */         if (((nextRoom.room instanceof MonsterRoom)) || ((nextRoom.room instanceof MonsterRoomElite))) {
+/* 2345 */           nextRoom.room.combatEvent = true;
+/*      */         }
+/* 2347 */         nextRoom.room.setMapSymbol("?");
+/* 2348 */         nextRoom.room.setMapImg(ImageMaster.MAP_NODE_EVENT, ImageMaster.MAP_NODE_EVENT_OUTLINE);
+/*      */       }
+/*      */       
+/* 2351 */       if (!isLoadingPostCombatSave) {
+/* 2352 */         CardCrawlGame.metricData.path_per_floor.add(roomMetricKey);
+/*      */       }
+/* 2354 */       setCurrMapNode(nextRoom);
+/*      */     }
+/*      */     
+/* 2357 */     if (getCurrRoom() != null) {
+/* 2358 */       for (AbstractRelic r : player.relics) {
+/* 2359 */         r.justEnteredRoom(getCurrRoom());
+/*      */       }
+/*      */     }
+/*      */     
+/* 2363 */     if (isLoadingCompletedEvent) {
+/* 2364 */       getCurrRoom().phase = AbstractRoom.RoomPhase.COMPLETE;
+/* 2365 */       String eventKey = (String)((HashMap)saveFile.metric_event_choices.get(saveFile.metric_event_choices.size() - 1)).get("event_name");
+/*      */       
+/* 2367 */       ((EventRoom)getCurrRoom()).event = EventHelper.getEvent(eventKey);
+/*      */     } else {
+/* 2369 */       CardCrawlGame.publisherIntegration.setRichPresenceDisplayPlaying(floorNum, player
+/*      */       
+/* 2371 */         .getLocalizedCharacterName());
+/* 2372 */       getCurrRoom().onPlayerEntry();
+/*      */     }
+/*      */     
+/* 2375 */     if (((getCurrRoom() instanceof MonsterRoom)) && (lastCombatMetricKey.equals("Shield and Spear")))
+/*      */     {
+/* 2377 */       player.movePosition(Settings.WIDTH / 2.0F, floorY);
+/*      */     } else {
+/* 2379 */       player.movePosition(Settings.WIDTH * 0.25F, floorY);
+/* 2380 */       player.flipHorizontal = false;
+/*      */     }
+/*      */     
+/*      */ 
+/* 2384 */     if ((currMapNode.room instanceof MonsterRoom)) {
+/* 2385 */       player.preBattlePrep();
+/*      */     }
+/*      */     
+/*      */ 
+/* 2389 */     scene.nextRoom(currMapNode.room);
+/*      */     
+/* 2391 */     if ((currMapNode.room instanceof RestRoom)) {
+/* 2392 */       rs = RenderScene.CAMPFIRE;
+/* 2393 */     } else if ((currMapNode.room.event instanceof AbstractImageEvent)) {
+/* 2394 */       rs = RenderScene.EVENT;
+/*      */     } else {
+/* 2396 */       rs = RenderScene.NORMAL;
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   private void incrementFloorBasedMetrics() {
+/* 2401 */     if (floorNum != 0) {
+/* 2402 */       CardCrawlGame.metricData.current_hp_per_floor.add(Integer.valueOf(player.currentHealth));
+/* 2403 */       CardCrawlGame.metricData.max_hp_per_floor.add(Integer.valueOf(player.maxHealth));
+/* 2404 */       CardCrawlGame.metricData.gold_per_floor.add(Integer.valueOf(player.gold));
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   private AbstractRoom generateRoom(EventHelper.RoomResult roomType) {
+/* 2409 */     logger.info("GENERATING ROOM: " + roomType.name());
+/* 2410 */     switch (roomType) {
+/*      */     case ELITE: 
+/* 2412 */       return new MonsterRoomElite();
+/*      */     case MONSTER: 
+/* 2414 */       return new MonsterRoom();
+/*      */     case SHOP: 
+/* 2416 */       return new ShopRoom();
+/*      */     case TREASURE: 
+/* 2418 */       return new TreasureRoom();
+/*      */     }
+/* 2420 */     return new EventRoom();
+/*      */   }
+/*      */   
+/*      */   public static MonsterGroup getMonsters()
+/*      */   {
+/* 2425 */     return getCurrRoom().monsters;
+/*      */   }
+/*      */   
+/*      */   public MonsterGroup getMonsterForRoomCreation() {
+/* 2429 */     if (monsterList.isEmpty()) {
+/* 2430 */       generateStrongEnemies(12);
+/*      */     }
+/* 2432 */     logger.info("MONSTER: " + (String)monsterList.get(0));
+/* 2433 */     lastCombatMetricKey = (String)monsterList.get(0);
+/* 2434 */     return MonsterHelper.getEncounter((String)monsterList.get(0));
+/*      */   }
+/*      */   
+/*      */   public MonsterGroup getEliteMonsterForRoomCreation() {
+/* 2438 */     if (eliteMonsterList.isEmpty()) {
+/* 2439 */       generateElites(10);
+/*      */     }
+/* 2441 */     logger.info("ELITE: " + (String)eliteMonsterList.get(0));
+/* 2442 */     lastCombatMetricKey = (String)eliteMonsterList.get(0);
+/* 2443 */     return MonsterHelper.getEncounter((String)eliteMonsterList.get(0));
+/*      */   }
+/*      */   
+/*      */   public static AbstractEvent generateEvent(com.megacrit.cardcrawl.random.Random rng)
+/*      */   {
+/* 2448 */     if (rng.random(1.0F) < shrineChance) {
+/* 2449 */       if ((!shrineList.isEmpty()) || (!specialOneTimeEventList.isEmpty()))
+/* 2450 */         return getShrine(rng);
+/* 2451 */       if (!eventList.isEmpty()) {
+/* 2452 */         return getEvent(rng);
+/*      */       }
+/* 2454 */       logger.info("No events or shrines left");
+/* 2455 */       return null;
+/*      */     }
+/*      */     
+/*      */ 
+/* 2459 */     AbstractEvent retVal = getEvent(rng);
+/* 2460 */     if (retVal == null) {
+/* 2461 */       return getShrine(rng);
+/*      */     }
+/* 2463 */     return retVal;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */   public static AbstractEvent getShrine(com.megacrit.cardcrawl.random.Random rng)
+/*      */   {
+/* 2469 */     ArrayList<String> tmp = new ArrayList();
+/* 2470 */     tmp.addAll(shrineList);
+/*      */     
+/*      */ 
+/* 2473 */     for (String e : specialOneTimeEventList) {
+/* 2474 */       switch (e) {
+/*      */       case "Fountain of Cleansing": 
+/* 2476 */         if (player.isCursed()) {
+/* 2477 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "Designer": 
+/* 2481 */         if (((id.equals("TheCity")) || (id.equals("TheBeyond"))) && (player.gold >= 75)) {
+/* 2482 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "Duplicator": 
+/* 2486 */         if ((id.equals("TheCity")) || (id.equals("TheBeyond"))) {
+/* 2487 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "Knowing Skull": 
+/* 2491 */         if ((id.equals("TheCity")) && (player.currentHealth > player.maxHealth / 2)) {
+/* 2492 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "N'loth": 
+/* 2496 */         if (((id.equals("TheCity")) || (id.equals("TheCity"))) && (player.relics.size() >= 2)) {
+/* 2497 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "The Joust": 
+/* 2501 */         if ((id.equals("TheCity")) && (player.gold >= 50)) {
+/* 2502 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "The Woman in Blue": 
+/* 2506 */         if (player.gold >= 50) {
+/* 2507 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "SecretPortal": 
+/* 2511 */         if ((CardCrawlGame.playtime >= 800.0F) && (id.equals("TheBeyond"))) {
+/* 2512 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       default: 
+/* 2516 */         tmp.add(e);
+/*      */       }
+/*      */       
+/*      */     }
+/*      */     
+/* 2521 */     String tmpKey = (String)tmp.get(rng.random(tmp.size() - 1));
+/* 2522 */     shrineList.remove(tmpKey);
+/* 2523 */     specialOneTimeEventList.remove(tmpKey);
+/* 2524 */     logger.info("Removed event: " + tmpKey + " from pool.");
+/*      */     
+/* 2526 */     return EventHelper.getEvent(tmpKey);
+/*      */   }
+/*      */   
+/*      */   public static AbstractEvent getEvent(com.megacrit.cardcrawl.random.Random rng) {
+/* 2530 */     ArrayList<String> tmp = new ArrayList();
+/* 2531 */     for (String e : eventList) {
+/* 2532 */       switch (e) {
+/*      */       case "Dead Adventurer": 
+/* 2534 */         if (floorNum > 6) {
+/* 2535 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "Mushrooms": 
+/* 2539 */         if (floorNum > 6) {
+/* 2540 */           tmp.add(e);
+/*      */         }
+/*      */         break;
+/*      */       case "The Moai Head": 
+/* 2544 */         if ((player.hasRelic("Golden Idol")) || (player.currentHealth / player.maxHealth <= 0.5F))
+/*      */         {
+/*      */ 
+/*      */ 
+/* 2548 */           tmp.add(e);
+/*      */         }
+/* 2550 */         break;
+/*      */       default: 
+/* 2552 */         tmp.add(e);
+/*      */       }
+/*      */       
+/*      */     }
+/*      */     
+/* 2557 */     if (tmp.isEmpty()) {
+/* 2558 */       return getShrine(rng);
+/*      */     }
+/*      */     
+/* 2561 */     String tmpKey = (String)tmp.get(rng.random(tmp.size() - 1));
+/* 2562 */     eventList.remove(tmpKey);
+/* 2563 */     logger.info("Removed event: " + tmpKey + " from pool.");
+/*      */     
+/* 2565 */     return EventHelper.getEvent(tmpKey);
+/*      */   }
+/*      */   
+/*      */   public MonsterGroup getBoss() {
+/* 2569 */     lastCombatMetricKey = bossKey;
+/* 2570 */     dungeonMapScreen.map.atBoss = true;
+/* 2571 */     return MonsterHelper.getEncounter(bossKey);
+/*      */   }
+/*      */   
+/*      */   public void update()
+/*      */   {
+/* 2576 */     if (!CardCrawlGame.stopClock) {
+/* 2577 */       CardCrawlGame.playtime += Gdx.graphics.getDeltaTime();
+/*      */     }
+/*      */     
+/* 2580 */     if (CardCrawlGame.screenTimer > 0.0F) {
+/* 2581 */       com.megacrit.cardcrawl.helpers.input.InputHelper.justClickedLeft = false;
+/* 2582 */       CInputActionSet.select.unpress();
+/*      */     }
+/*      */     
+/* 2585 */     updateSceneOffset();
+/* 2586 */     topPanel.update();
+/* 2587 */     dynamicButton.update();
+/* 2588 */     dynamicBanner.update();
+/* 2589 */     updateFading();
+/* 2590 */     currMapNode.room.updateObjects();
+/*      */     
+/* 2592 */     if (isScreenUp) {
+/* 2593 */       topGradientColor.a = MathHelper.fadeLerpSnap(topGradientColor.a, 0.25F);
+/* 2594 */       botGradientColor.a = MathHelper.fadeLerpSnap(botGradientColor.a, 0.25F);
+/*      */     } else {
+/* 2596 */       topGradientColor.a = MathHelper.fadeLerpSnap(topGradientColor.a, 0.1F);
+/* 2597 */       botGradientColor.a = MathHelper.fadeLerpSnap(botGradientColor.a, 0.1F);
+/*      */     }
+/*      */     
+/* 2600 */     switch (screen) {
+/*      */     case NO_INTERACT: 
+/*      */     case NONE: 
+/* 2603 */       dungeonMapScreen.update();
+/* 2604 */       currMapNode.room.update();
+/* 2605 */       scene.update();
+/* 2606 */       currMapNode.room.eventControllerInput();
+/* 2607 */       break;
+/*      */     case FTUE: 
+/* 2609 */       ftue.update();
+/* 2610 */       com.megacrit.cardcrawl.helpers.input.InputHelper.justClickedRight = false;
+/* 2611 */       com.megacrit.cardcrawl.helpers.input.InputHelper.justClickedLeft = false;
+/* 2612 */       currMapNode.room.update();
+/* 2613 */       break;
+/*      */     case MASTER_DECK_VIEW: 
+/* 2615 */       deckViewScreen.update();
+/* 2616 */       break;
+/*      */     case GAME_DECK_VIEW: 
+/* 2618 */       gameDeckViewScreen.update();
+/* 2619 */       break;
+/*      */     case DISCARD_VIEW: 
+/* 2621 */       discardPileViewScreen.update();
+/* 2622 */       break;
+/*      */     case EXHAUST_VIEW: 
+/* 2624 */       exhaustPileViewScreen.update();
+/* 2625 */       break;
+/*      */     case SETTINGS: 
+/* 2627 */       settingsScreen.update();
+/* 2628 */       break;
+/*      */     case INPUT_SETTINGS: 
+/* 2630 */       inputSettingsScreen.update();
+/* 2631 */       break;
+/*      */     case MAP: 
+/* 2633 */       dungeonMapScreen.update();
+/* 2634 */       break;
+/*      */     case GRID: 
+/* 2636 */       gridSelectScreen.update();
+/* 2637 */       break;
+/*      */     case CARD_REWARD: 
+/* 2639 */       cardRewardScreen.update();
+/* 2640 */       break;
+/*      */     case COMBAT_REWARD: 
+/* 2642 */       combatRewardScreen.update();
+/* 2643 */       break;
+/*      */     case BOSS_REWARD: 
+/* 2645 */       bossRelicScreen.update();
+/* 2646 */       currMapNode.room.update();
+/* 2647 */       break;
+/*      */     case HAND_SELECT: 
+/* 2649 */       handCardSelectScreen.update();
+/* 2650 */       currMapNode.room.update();
+/* 2651 */       break;
+/*      */     case SHOP: 
+/* 2653 */       shopScreen.update();
+/* 2654 */       break;
+/*      */     case DEATH: 
+/* 2656 */       deathScreen.update();
+/* 2657 */       break;
+/*      */     case VICTORY: 
+/* 2659 */       victoryScreen.update();
+/* 2660 */       break;
+/*      */     case UNLOCK: 
+/* 2662 */       unlockScreen.update();
+/* 2663 */       break;
+/*      */     case NEOW_UNLOCK: 
+/* 2665 */       gUnlockScreen.update();
+/* 2666 */       break;
+/*      */     case CREDITS: 
+/* 2668 */       creditsScreen.update();
+/* 2669 */       break;
+/*      */     case DOOR_UNLOCK: 
+/* 2671 */       CardCrawlGame.mainMenuScreen.doorUnlockScreen.update();
+/* 2672 */       break;
+/*      */     default: 
+/* 2674 */       logger.info("ERROR: UNKNOWN SCREEN TO UPDATE: " + screen.name());
+/*      */     }
+/*      */     
+/* 2677 */     turnPhaseEffectActive = false;
+/*      */     
+/*      */ 
+/* 2680 */     for (Iterator<AbstractGameEffect> i = topLevelEffects.iterator(); i.hasNext();) {
+/* 2681 */       AbstractGameEffect e = (AbstractGameEffect)i.next();
+/* 2682 */       e.update();
+/* 2683 */       if (e.isDone)
+/*      */       {
+/* 2685 */         i.remove();
+/*      */       }
+/*      */     }
+/*      */     
+/*      */ 
+/* 2690 */     for (Iterator<AbstractGameEffect> i = effectList.iterator(); i.hasNext();) {
+/* 2691 */       AbstractGameEffect e = (AbstractGameEffect)i.next();
+/* 2692 */       e.update();
+/* 2693 */       if ((e instanceof PlayerTurnEffect)) {
+/* 2694 */         turnPhaseEffectActive = true;
+/*      */       }
+/* 2696 */       if (e.isDone)
+/*      */       {
+/* 2698 */         i.remove();
+/*      */       }
+/*      */     }
+/*      */     
+/* 2702 */     for (Iterator<AbstractGameEffect> i = effectsQueue.iterator(); i.hasNext();) {
+/* 2703 */       AbstractGameEffect e = (AbstractGameEffect)i.next();
+/* 2704 */       effectList.add(e);
+/* 2705 */       i.remove();
+/*      */     }
+/*      */     
+/* 2708 */     for (Iterator<AbstractGameEffect> i = topLevelEffectsQueue.iterator(); i.hasNext();) {
+/* 2709 */       AbstractGameEffect e = (AbstractGameEffect)i.next();
+/* 2710 */       topLevelEffects.add(e);
+/* 2711 */       i.remove();
+/*      */     }
+/*      */     
+/* 2714 */     overlayMenu.update();
+/*      */   }
+/*      */   
+/*      */   private void updateSceneOffset() {
+/* 2718 */     if (sceneOffsetTimer != 0.0F) {
+/* 2719 */       sceneOffsetTimer -= Gdx.graphics.getDeltaTime();
+/* 2720 */       if (sceneOffsetTimer < 0.0F) {
+/* 2721 */         sceneOffsetY = 0.0F;
+/* 2722 */         sceneOffsetTimer = 0.0F;
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public void render(SpriteBatch sb)
+/*      */   {
+/* 2734 */     switch (rs) {
+/*      */     case NORMAL: 
+/* 2736 */       scene.renderCombatRoomBg(sb);
+/* 2737 */       break;
+/*      */     case CAMPFIRE: 
+/* 2739 */       scene.renderCampfireRoom(sb);
+/* 2740 */       break;
+/*      */     case EVENT: 
+/* 2742 */       scene.renderEventRoom(sb);
+/*      */     }
+/*      */     
+/*      */     
+/* 2746 */     dynamicButton.render(sb);
+/*      */     
+/*      */ 
+/* 2749 */     for (Iterator localIterator = effectList.iterator(); localIterator.hasNext();) { e = (AbstractGameEffect)localIterator.next();
+/* 2750 */       if (e.renderBehind) {
+/* 2751 */         e.render(sb);
+/*      */       }
+/*      */     }
+/*      */     AbstractGameEffect e;
+/* 2755 */     currMapNode.room.render(sb);
+/* 2756 */     overlayMenu.renderBgPanels(sb);
+/*      */     
+/* 2758 */     if (rs == RenderScene.NORMAL) {
+/* 2759 */       scene.renderCombatRoomFg(sb);
+/*      */     }
+/*      */     
+/* 2762 */     AbstractRoom room = getCurrRoom();
+/*      */     
+/* 2764 */     if (((room instanceof EventRoom)) || ((room instanceof NeowRoom)) || ((room instanceof VictoryRoom))) {
+/* 2765 */       room.renderEventTexts(sb);
+/*      */     }
+/*      */     
+/*      */ 
+/* 2769 */     for (AbstractGameEffect e : effectList) {
+/* 2770 */       if (!e.renderBehind) {
+/* 2771 */         e.render(sb);
+/*      */       }
+/*      */     }
+/*      */     
+/* 2775 */     overlayMenu.render(sb);
+/* 2776 */     overlayMenu.renderBlackScreen(sb);
+/*      */     
+/* 2778 */     switch (screen) {
+/*      */     case NONE: 
+/* 2780 */       dungeonMapScreen.render(sb);
+/* 2781 */       break;
+/*      */     case MASTER_DECK_VIEW: 
+/* 2783 */       deckViewScreen.render(sb);
+/* 2784 */       break;
+/*      */     case DISCARD_VIEW: 
+/* 2786 */       discardPileViewScreen.render(sb);
+/* 2787 */       break;
+/*      */     case GAME_DECK_VIEW: 
+/* 2789 */       gameDeckViewScreen.render(sb);
+/* 2790 */       break;
+/*      */     case EXHAUST_VIEW: 
+/* 2792 */       exhaustPileViewScreen.render(sb);
+/* 2793 */       break;
+/*      */     case SETTINGS: 
+/* 2795 */       settingsScreen.render(sb);
+/* 2796 */       break;
+/*      */     case INPUT_SETTINGS: 
+/* 2798 */       inputSettingsScreen.render(sb);
+/* 2799 */       break;
+/*      */     case MAP: 
+/* 2801 */       dungeonMapScreen.render(sb);
+/* 2802 */       break;
+/*      */     case GRID: 
+/* 2804 */       gridSelectScreen.render(sb);
+/* 2805 */       break;
+/*      */     case CARD_REWARD: 
+/* 2807 */       cardRewardScreen.render(sb);
+/* 2808 */       break;
+/*      */     case COMBAT_REWARD: 
+/* 2810 */       combatRewardScreen.render(sb);
+/* 2811 */       break;
+/*      */     case BOSS_REWARD: 
+/* 2813 */       bossRelicScreen.render(sb);
+/* 2814 */       break;
+/*      */     case HAND_SELECT: 
+/* 2816 */       handCardSelectScreen.render(sb);
+/* 2817 */       break;
+/*      */     case SHOP: 
+/* 2819 */       shopScreen.render(sb);
+/* 2820 */       break;
+/*      */     case DEATH: 
+/* 2822 */       deathScreen.render(sb);
+/* 2823 */       break;
+/*      */     case VICTORY: 
+/* 2825 */       victoryScreen.render(sb);
+/* 2826 */       break;
+/*      */     case UNLOCK: 
+/* 2828 */       unlockScreen.render(sb);
+/* 2829 */       break;
+/*      */     case DOOR_UNLOCK: 
+/* 2831 */       CardCrawlGame.mainMenuScreen.doorUnlockScreen.render(sb);
+/* 2832 */       break;
+/*      */     case NEOW_UNLOCK: 
+/* 2834 */       gUnlockScreen.render(sb);
+/* 2835 */       break;
+/*      */     case CREDITS: 
+/* 2837 */       creditsScreen.render(sb);
+/*      */     case FTUE: 
+/*      */       break;
+/*      */     case NO_INTERACT: 
+/*      */       break;
+/*      */     default: 
+/* 2843 */       logger.info("ERROR: UNKNOWN SCREEN TO RENDER: " + screen.name());
+/*      */     }
+/*      */     
+/*      */     
+/* 2847 */     if (screen != CurrentScreen.UNLOCK) {
+/* 2848 */       sb.setColor(topGradientColor);
+/* 2849 */       if (!Settings.hideTopBar) {
+/* 2850 */         sb.draw(ImageMaster.SCROLL_GRADIENT, 0.0F, Settings.HEIGHT - 128.0F * Settings.scale, Settings.WIDTH, 64.0F * Settings.scale);
+/*      */       }
+/*      */       
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/* 2857 */       sb.setColor(botGradientColor);
+/* 2858 */       if (!Settings.hideTopBar) {
+/* 2859 */         sb.draw(ImageMaster.SCROLL_GRADIENT, 0.0F, 64.0F * Settings.scale, Settings.WIDTH, -64.0F * Settings.scale);
+/*      */       }
+/*      */     }
+/*      */     
+/* 2863 */     if (screen == CurrentScreen.FTUE) {
+/* 2864 */       ftue.render(sb);
+/*      */     }
+/*      */     
+/* 2867 */     overlayMenu.cancelButton.render(sb);
+/* 2868 */     dynamicBanner.render(sb);
+/* 2869 */     if (screen != CurrentScreen.UNLOCK) {
+/* 2870 */       topPanel.render(sb);
+/*      */     }
+/* 2872 */     currMapNode.room.renderAboveTopPanel(sb);
+/*      */     
+/* 2874 */     for (AbstractGameEffect e : topLevelEffects) {
+/* 2875 */       if (!e.renderBehind) {
+/* 2876 */         e.render(sb);
+/*      */       }
+/*      */     }
+/*      */     
+/* 2880 */     sb.setColor(fadeColor);
+/* 2881 */     sb.draw(ImageMaster.WHITE_SQUARE_IMG, 0.0F, 0.0F, Settings.WIDTH, Settings.HEIGHT);
+/*      */   }
+/*      */   
+/*      */   public void updateFading()
+/*      */   {
+/* 2886 */     if (isFadingIn)
+/*      */     {
+/* 2888 */       fadeTimer -= Gdx.graphics.getDeltaTime();
+/* 2889 */       fadeColor.a = Interpolation.fade.apply(0.0F, 1.0F, fadeTimer / 0.8F);
+/* 2890 */       if (fadeTimer < 0.0F) {
+/* 2891 */         isFadingIn = false;
+/* 2892 */         fadeColor.a = 0.0F;
+/* 2893 */         fadeTimer = 0.0F;
+/*      */       }
+/* 2895 */     } else if (isFadingOut)
+/*      */     {
+/* 2897 */       fadeTimer -= Gdx.graphics.getDeltaTime();
+/* 2898 */       fadeColor.a = Interpolation.fade.apply(1.0F, 0.0F, fadeTimer / 0.8F);
+/* 2899 */       if (fadeTimer < 0.0F) {
+/* 2900 */         fadeTimer = 0.0F;
+/* 2901 */         isFadingOut = false;
+/* 2902 */         fadeColor.a = 1.0F;
+/* 2903 */         if (!isDungeonBeaten) {
+/* 2904 */           nextRoomTransition();
+/*      */         }
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static void closeCurrentScreen()
+/*      */   {
+/* 2914 */     switch (screen) {
+/*      */     case MASTER_DECK_VIEW: 
+/* 2916 */       overlayMenu.cancelButton.hide();
+/* 2917 */       genericScreenOverlayReset();
+/* 2918 */       for (AbstractCard c : player.masterDeck.group) {
+/* 2919 */         c.unhover();
+/* 2920 */         c.untip();
+/*      */       }
+/* 2922 */       break;
+/*      */     case DISCARD_VIEW: 
+/* 2924 */       overlayMenu.cancelButton.hide();
+/* 2925 */       genericScreenOverlayReset();
+/* 2926 */       for (AbstractCard c : player.discardPile.group) {
+/* 2927 */         c.drawScale = 0.12F;
+/* 2928 */         c.targetDrawScale = 0.12F;
+/* 2929 */         c.teleportToDiscardPile();
+/* 2930 */         c.darken(true);
+/* 2931 */         c.unhover();
+/*      */       }
+/* 2933 */       break;
+/*      */     case FTUE: 
+/* 2935 */       genericScreenOverlayReset();
+/* 2936 */       break;
+/*      */     case GAME_DECK_VIEW: 
+/* 2938 */       overlayMenu.cancelButton.hide();
+/* 2939 */       genericScreenOverlayReset();
+/* 2940 */       break;
+/*      */     case EXHAUST_VIEW: 
+/* 2942 */       overlayMenu.cancelButton.hide();
+/* 2943 */       genericScreenOverlayReset();
+/* 2944 */       break;
+/*      */     case SETTINGS: 
+/* 2946 */       overlayMenu.cancelButton.hide();
+/* 2947 */       genericScreenOverlayReset();
+/* 2948 */       dynamicButton.hide();
+/* 2949 */       settingsScreen.abandonPopup.hide();
+/* 2950 */       settingsScreen.exitPopup.hide();
+/* 2951 */       break;
+/*      */     case INPUT_SETTINGS: 
+/* 2953 */       overlayMenu.cancelButton.hide();
+/* 2954 */       genericScreenOverlayReset();
+/* 2955 */       dynamicButton.hide();
+/* 2956 */       settingsScreen.abandonPopup.hide();
+/* 2957 */       settingsScreen.exitPopup.hide();
+/* 2958 */       break;
+/*      */     case NEOW_UNLOCK: 
+/* 2960 */       genericScreenOverlayReset();
+/* 2961 */       dynamicButton.hide();
+/* 2962 */       CardCrawlGame.sound.stop("UNLOCK_SCREEN", gUnlockScreen.id);
+/* 2963 */       break;
+/*      */     case GRID: 
+/* 2965 */       genericScreenOverlayReset();
+/* 2966 */       if (!combatRewardScreen.rewards.isEmpty()) {
+/* 2967 */         previousScreen = CurrentScreen.COMBAT_REWARD;
+/*      */       }
+/*      */       break;
+/*      */     case CARD_REWARD: 
+/* 2971 */       overlayMenu.cancelButton.hide();
+/* 2972 */       dynamicBanner.hide();
+/* 2973 */       genericScreenOverlayReset();
+/* 2974 */       if (!screenSwap) {
+/* 2975 */         cardRewardScreen.onClose();
+/*      */       }
+/*      */       break;
+/*      */     case COMBAT_REWARD: 
+/* 2979 */       dynamicButton.hide();
+/* 2980 */       dynamicBanner.hide();
+/* 2981 */       genericScreenOverlayReset();
+/* 2982 */       break;
+/*      */     case BOSS_REWARD: 
+/* 2984 */       genericScreenOverlayReset();
+/* 2985 */       dynamicBanner.hide();
+/* 2986 */       break;
+/*      */     case HAND_SELECT: 
+/* 2988 */       genericScreenOverlayReset();
+/* 2989 */       overlayMenu.showCombatPanels();
+/* 2990 */       break;
+/*      */     case MAP: 
+/* 2992 */       genericScreenOverlayReset();
+/* 2993 */       dungeonMapScreen.close();
+/* 2994 */       if ((!firstRoomChosen) && (nextRoom != null) && (!dungeonMapScreen.dismissable)) {
+/* 2995 */         firstRoomChosen = true;
+/* 2996 */         firstRoomLogic();
+/*      */       }
+/*      */       break;
+/*      */     case SHOP: 
+/* 3000 */       CardCrawlGame.sound.play("SHOP_CLOSE");
+/* 3001 */       genericScreenOverlayReset();
+/* 3002 */       overlayMenu.cancelButton.hide();
+/* 3003 */       break;
+/*      */     case TRANSFORM: 
+/* 3005 */       CardCrawlGame.sound.play("ATTACK_MAGIC_SLOW_1");
+/* 3006 */       genericScreenOverlayReset();
+/* 3007 */       overlayMenu.cancelButton.hide();
+/* 3008 */       break;
+/*      */     case DEATH: case VICTORY: case UNLOCK: case CREDITS: case DOOR_UNLOCK: default: 
+/* 3010 */       logger.info("UNSPECIFIED CASE: " + screen.name());
+/*      */     }
+/*      */     
+/*      */     
+/*      */ 
+/* 3015 */     if (previousScreen == null) {
+/* 3016 */       screen = CurrentScreen.NONE;
+/*      */     }
+/* 3018 */     else if (screenSwap) {
+/* 3019 */       screenSwap = false;
+/*      */     }
+/*      */     else {
+/* 3022 */       screen = previousScreen;
+/* 3023 */       previousScreen = null;
+/* 3024 */       isScreenUp = true;
+/* 3025 */       openPreviousScreen(screen);
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   private static void openPreviousScreen(CurrentScreen s) {
+/* 3030 */     switch (s) {
+/*      */     case DEATH: 
+/* 3032 */       deathScreen.reopen();
+/* 3033 */       break;
+/*      */     case VICTORY: 
+/* 3035 */       victoryScreen.reopen();
+/* 3036 */       break;
+/*      */     case MASTER_DECK_VIEW: 
+/* 3038 */       deckViewScreen.open();
+/* 3039 */       break;
+/*      */     case CARD_REWARD: 
+/* 3041 */       cardRewardScreen.reopen();
+/*      */       
+/*      */ 
+/* 3044 */       if (cardRewardScreen.rItem != null) {
+/* 3045 */         previousScreen = CurrentScreen.COMBAT_REWARD;
+/*      */       }
+/*      */       break;
+/*      */     case DISCARD_VIEW: 
+/* 3049 */       discardPileViewScreen.reopen();
+/* 3050 */       break;
+/*      */     case EXHAUST_VIEW: 
+/* 3052 */       exhaustPileViewScreen.reopen();
+/* 3053 */       break;
+/*      */     case GAME_DECK_VIEW: 
+/* 3055 */       gameDeckViewScreen.reopen();
+/* 3056 */       break;
+/*      */     case HAND_SELECT: 
+/* 3058 */       overlayMenu.hideBlackScreen();
+/* 3059 */       handCardSelectScreen.reopen();
+/* 3060 */       break;
+/*      */     case COMBAT_REWARD: 
+/* 3062 */       combatRewardScreen.reopen();
+/* 3063 */       break;
+/*      */     case BOSS_REWARD: 
+/* 3065 */       bossRelicScreen.reopen();
+/* 3066 */       break;
+/*      */     case SHOP: 
+/* 3068 */       shopScreen.open();
+/* 3069 */       break;
+/*      */     case GRID: 
+/* 3071 */       overlayMenu.hideBlackScreen();
+/* 3072 */       if (gridSelectScreen.isJustForConfirming) {
+/* 3073 */         dynamicBanner.appear();
+/*      */       }
+/* 3075 */       gridSelectScreen.reopen();
+/* 3076 */       break;
+/*      */     case NEOW_UNLOCK: 
+/* 3078 */       gUnlockScreen.reOpen();
+/* 3079 */       break;
+/*      */     case MAP: 
+/* 3081 */       if (dungeonMapScreen.dismissable) {
+/* 3082 */         overlayMenu.cancelButton.show(DungeonMapScreen.TEXT[1]);
+/*      */       }
+/*      */       
+/*      */ 
+/*      */       break;
+/*      */     }
+/*      */     
+/*      */   }
+/*      */   
+/*      */ 
+/*      */   private static void genericScreenOverlayReset()
+/*      */   {
+/* 3094 */     if (previousScreen == null) {
+/* 3095 */       if (player.isDead) {
+/* 3096 */         previousScreen = CurrentScreen.DEATH;
+/*      */       } else {
+/* 3098 */         isScreenUp = false;
+/* 3099 */         overlayMenu.hideBlackScreen();
+/*      */       }
+/*      */     }
+/*      */     
+/* 3103 */     if ((getCurrRoom().phase == AbstractRoom.RoomPhase.COMBAT) && (!player.isDead)) {
+/* 3104 */       overlayMenu.showCombatPanels();
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static void fadeIn()
+/*      */   {
+/* 3112 */     if (fadeColor.a != 1.0F) {
+/* 3113 */       logger.info("WARNING: Attempting to fade in even though screen is not black");
+/*      */     }
+/* 3115 */     isFadingIn = true;
+/* 3116 */     if (Settings.FAST_MODE) {
+/* 3117 */       fadeTimer = 0.001F;
+/*      */     } else {
+/* 3119 */       fadeTimer = 0.8F;
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static void fadeOut()
+/*      */   {
+/* 3127 */     if (fadeTimer == 0.0F) {
+/* 3128 */       if (fadeColor.a != 0.0F) {
+/* 3129 */         logger.info("WARNING: Attempting to fade out even though screen is not transparent");
+/*      */       }
+/* 3131 */       isFadingOut = true;
+/* 3132 */       if (Settings.FAST_MODE) {
+/* 3133 */         fadeTimer = 0.001F;
+/*      */       } else {
+/* 3135 */         fadeTimer = 0.8F;
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */   public static enum CurrentScreen
+/*      */   {
+/* 3145 */     NONE,  MASTER_DECK_VIEW,  SETTINGS,  INPUT_SETTINGS,  GRID,  MAP,  FTUE,  CHOOSE_ONE,  HAND_SELECT,  SHOP,  COMBAT_REWARD,  DISCARD_VIEW,  EXHAUST_VIEW,  GAME_DECK_VIEW,  BOSS_REWARD,  DEATH,  CARD_REWARD,  TRANSFORM,  VICTORY,  UNLOCK,  DOOR_UNLOCK,  CREDITS,  NO_INTERACT,  NEOW_UNLOCK;
+/*      */     
+/*      */     private CurrentScreen() {} }
+/*      */   
+/* 3149 */   public static enum RenderScene { NORMAL,  EVENT,  CAMPFIRE;
+/*      */     
+/*      */     private RenderScene() {}
+/*      */   }
+/*      */   
+/*      */   public static void dungeonTransitionSetup()
+/*      */   {
+/* 3156 */     actNum += 1;
+/*      */     
+/*      */ 
+/* 3159 */     if ((cardRng.counter > 0) && (cardRng.counter < 250)) {
+/* 3160 */       cardRng.setCounter(250);
+/* 3161 */     } else if ((cardRng.counter > 250) && (cardRng.counter < 500)) {
+/* 3162 */       cardRng.setCounter(500);
+/* 3163 */     } else if ((cardRng.counter > 500) && (cardRng.counter < 750)) {
+/* 3164 */       cardRng.setCounter(750);
+/*      */     }
+/* 3166 */     logger.info("CardRng Counter: " + cardRng.counter);
+/*      */     
+/* 3168 */     topPanel.unhoverHitboxes();
+/*      */     
+/* 3170 */     pathX.clear();
+/* 3171 */     pathY.clear();
+/*      */     
+/*      */ 
+/* 3174 */     EventHelper.resetProbabilities();
+/* 3175 */     eventList.clear();
+/* 3176 */     shrineList.clear();
+/*      */     
+/*      */ 
+/* 3179 */     monsterList.clear();
+/* 3180 */     eliteMonsterList.clear();
+/* 3181 */     bossList.clear();
+/*      */     
+/*      */ 
+/* 3184 */     AbstractRoom.blizzardPotionMod = 0;
+/*      */     
+/*      */ 
+/*      */ 
+/* 3188 */     if (ascensionLevel >= 5) {
+/* 3189 */       player.heal(MathUtils.round((player.maxHealth - player.currentHealth) * 0.75F), false);
+/*      */     } else {
+/* 3191 */       player.heal(player.maxHealth, false);
+/*      */     }
+/*      */     
+/* 3194 */     if (floorNum > 1) {
+/* 3195 */       topPanel.panelHealEffect();
+/*      */     }
+/*      */     
+/*      */ 
+/* 3199 */     if (floorNum <= 1)
+/*      */     {
+/* 3201 */       if ((CardCrawlGame.dungeon instanceof Exordium)) {
+/* 3202 */         if (ascensionLevel >= 14) {
+/* 3203 */           player.decreaseMaxHealth(player.getAscensionMaxHPLoss());
+/*      */         }
+/* 3205 */         if (ascensionLevel >= 6) {
+/* 3206 */           player.currentHealth = MathUtils.round(player.maxHealth * 0.9F);
+/*      */         }
+/* 3208 */         if (ascensionLevel >= 10) {
+/* 3209 */           player.masterDeck.addToTop(new AscendersBane());
+/* 3210 */           UnlockTracker.markCardAsSeen("AscendersBane");
+/*      */         }
+/* 3212 */         CardCrawlGame.playtime = 0.0F;
+/*      */       }
+/*      */     }
+/*      */     
+/* 3216 */     dungeonMapScreen.map.atBoss = false;
+/*      */   }
+/*      */   
+/*      */ 
+/*      */ 
+/*      */   public static void reset()
+/*      */   {
+/* 3223 */     logger.info("Resetting variables...");
+/* 3224 */     CardCrawlGame.resetScoreVars();
+/* 3225 */     ModHelper.setModsFalse();
+/* 3226 */     floorNum = 0;
+/* 3227 */     actNum = 0;
+/*      */     
+/* 3229 */     if ((currMapNode != null) && (getCurrRoom().monsters != null)) {
+/* 3230 */       for (AbstractMonster m : getCurrRoom().monsters.monsters) {
+/* 3231 */         m.dispose();
+/*      */       }
+/*      */     }
+/*      */     
+/* 3235 */     currMapNode = null;
+/* 3236 */     shrineList.clear();
+/* 3237 */     relicsToRemoveOnStart.clear();
+/* 3238 */     previousScreen = null;
+/* 3239 */     actionManager.clear();
+/* 3240 */     actionManager.clearNextRoomCombatActions();
+/* 3241 */     combatRewardScreen.clear();
+/* 3242 */     cardRewardScreen.reset();
+/*      */     
+/*      */ 
+/*      */ 
+/* 3246 */     effectList.clear();
+/*      */     
+/*      */ 
+/*      */ 
+/* 3250 */     effectsQueue.clear();
+/*      */     
+/*      */ 
+/*      */ 
+/* 3254 */     topLevelEffectsQueue.clear();
+/*      */     
+/*      */ 
+/*      */ 
+/* 3258 */     topLevelEffects.clear();
+/* 3259 */     firstChest = true;
+/* 3260 */     encounteredCursedChest = false;
+/* 3261 */     cardBlizzRandomizer = cardBlizzStartOffset;
+/* 3262 */     if (player != null) {
+/* 3263 */       player.relics.clear();
+/*      */     }
+/*      */     
+/* 3266 */     rs = RenderScene.NORMAL;
+/* 3267 */     blightPool.clear();
+/*      */   }
+/*      */   
+/*      */   protected void removeRelicFromPool(ArrayList<String> pool, String name)
+/*      */   {
+/* 3272 */     for (Iterator<String> i = pool.iterator(); i.hasNext();) {
+/* 3273 */       String s = (String)i.next();
+/* 3274 */       if (s.equals(name)) {
+/* 3275 */         i.remove();
+/* 3276 */         logger.info("Relic" + s + " removed from relic pool.");
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public static void onModifyPower() {
+/* 3282 */     if (player != null) {
+/* 3283 */       player.hand.applyPowers();
+/*      */       
+/* 3285 */       if (player.hasPower("Focus")) {
+/* 3286 */         for (AbstractOrb o : player.orbs) {
+/* 3287 */           o.updateDescription();
+/*      */         }
+/*      */       }
+/*      */     }
+/* 3291 */     if (getCurrRoom().monsters != null) {
+/* 3292 */       for (AbstractMonster m : getCurrRoom().monsters.monsters) {
+/* 3293 */         m.applyPowers();
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public void checkForPactAchievement() {
+/* 3299 */     if (player != null)
+/*      */     {
+/* 3301 */       if (player.exhaustPile.size() >= 20) {
+/* 3302 */         UnlockTracker.unlockAchievement("THE_PACT");
+/*      */       }
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public void loadSave(SaveFile saveFile) {
+/* 3308 */     floorNum = saveFile.floor_num;
+/* 3309 */     actNum = saveFile.act_num;
+/* 3310 */     Settings.seed = Long.valueOf(saveFile.seed);
+/* 3311 */     loadSeeds(saveFile);
+/* 3312 */     monsterList = saveFile.monster_list;
+/* 3313 */     eliteMonsterList = saveFile.elite_monster_list;
+/* 3314 */     bossList = saveFile.boss_list;
+/* 3315 */     setBoss(saveFile.boss);
+/* 3316 */     commonRelicPool = saveFile.common_relics;
+/* 3317 */     uncommonRelicPool = saveFile.uncommon_relics;
+/* 3318 */     rareRelicPool = saveFile.rare_relics;
+/* 3319 */     shopRelicPool = saveFile.shop_relics;
+/* 3320 */     bossRelicPool = saveFile.boss_relics;
+/* 3321 */     pathX = saveFile.path_x;
+/* 3322 */     pathY = saveFile.path_y;
+/* 3323 */     bossCount = saveFile.spirit_count;
+/* 3324 */     eventList = saveFile.event_list;
+/* 3325 */     specialOneTimeEventList = saveFile.one_time_event_list;
+/* 3326 */     EventHelper.setChances(saveFile.event_chances);
+/* 3327 */     AbstractRoom.blizzardPotionMod = saveFile.potion_chance;
+/* 3328 */     ShopScreen.purgeCost = saveFile.purgeCost;
+/* 3329 */     com.megacrit.cardcrawl.helpers.CardHelper.obtainedCards = saveFile.obtained_cards;
+/*      */     
+/* 3331 */     if (saveFile.daily_mods != null) {
+/* 3332 */       ModHelper.setMods(saveFile.daily_mods);
+/*      */     }
+/*      */   }
+/*      */   
+/*      */   public static AbstractBlight getBlight(String targetID)
+/*      */   {
+/* 3338 */     for (AbstractBlight b : blightPool) {
+/* 3339 */       if (b.blightID.equals(targetID)) {
+/* 3340 */         return b;
+/*      */       }
+/*      */     }
+/* 3343 */     return null;
+/*      */   }
+/*      */ }
+
+
+/* Location:              C:\Users\robin\Documents\sts_modding\lib\desktop-1.0.jar!\com\megacrit\cardcrawl\dungeons\AbstractDungeon.class
+ * Java compiler version: 8 (52.0)
+ * JD-Core Version:       0.7.1
+ */

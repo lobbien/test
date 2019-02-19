@@ -1,0 +1,27 @@
+ public void update()
+  {
+    if (!CardCrawlGame.stopClock) {
+      CardCrawlGame.playtime += Gdx.graphics.getDeltaTime();
+    }
+    if (CardCrawlGame.screenTimer > 0.0F)
+    {
+      com.megacrit.cardcrawl.helpers.input.InputHelper.justClickedLeft = false;
+      CInputActionSet.select.unpress();
+    }
+    updateSceneOffset();
+    topPanel.update();
+    dynamicButton.update();
+    dynamicBanner.update();
+    updateFading();
+    currMapNode.room.updateObjects();
+    if (isScreenUp)(
+    {
+      topGradientColor.a = MathHelper.fadeLerpSnap(topGradientColor.a, 0.25F);
+      botGradientColor.a = MathHelper.fadeLerpSnap(botGradientColor.a, 0.25F);
+    }
+    else
+    {
+      topGradientColor.a = MathHelper.fadeLerpSnap(topGradientColor.a, 0.1F);
+      botGradientColor.a = MathHelper.fadeLerpSnap(botGradientColor.a, 0.1F);
+    }
+    switch (screen)

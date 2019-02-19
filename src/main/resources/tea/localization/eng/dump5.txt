@@ -1,0 +1,47 @@
+ public void render(SpriteBatch sb)
+/*      */   {
+/* 2734 */     switch (rs) {
+/*      */     case NORMAL: 
+/* 2736 */       scene.renderCombatRoomBg(sb);
+/* 2737 */       break;
+/*      */     case CAMPFIRE: 
+/* 2739 */       scene.renderCampfireRoom(sb);
+/* 2740 */       break;
+/*      */     case EVENT: 
+/* 2742 */       scene.renderEventRoom(sb);
+/*      */     }
+/*      */     
+/*      */     
+/* 2746 */     dynamicButton.render(sb);
+/*      */     
+/*      */ 
+/* 2749 */     for (Iterator localIterator = effectList.iterator(); localIterator.hasNext();) { e = (AbstractGameEffect)localIterator.next();
+/* 2750 */       if (e.renderBehind) {
+/* 2751 */         e.render(sb);
+/*      */       }
+/*      */     }
+/*      */     AbstractGameEffect e;
+/* 2755 */     currMapNode.room.render(sb);
+/* 2756 */     overlayMenu.renderBgPanels(sb);
+/*      */     
+/* 2758 */     if (rs == RenderScene.NORMAL) {
+/* 2759 */       scene.renderCombatRoomFg(sb);
+/*      */     }
+/*      */     
+/* 2762 */     AbstractRoom room = getCurrRoom();
+/*      */     
+/* 2764 */     if (((room instanceof EventRoom)) || ((room instanceof NeowRoom)) || ((room instanceof VictoryRoom))) {
+/* 2765 */       room.renderEventTexts(sb);
+/*      */     }
+/*      */     
+/*      */ 
+/* 2769 */     for (AbstractGameEffect e : effectList) {
+/* 2770 */       if (!e.renderBehind) {
+/* 2771 */         e.render(sb);
+/*      */       }
+/*      */     }
+/*      */     
+/* 2775 */     overlayMenu.render(sb);
+/* 2776 */     overlayMenu.renderBlackScreen(sb);
+/*      */     
+/* 2778 */     switch (screen) {

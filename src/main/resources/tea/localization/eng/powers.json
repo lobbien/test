@@ -1,0 +1,34 @@
+{
+	"exordian_avenger:counter":
+	{	
+		"NAME": "Counter", 
+		"DESCRIPTIONS":[
+			"Whenever an enemy gains strength,",
+			" deal Damage equal to ", 
+			" times the Strength gain to the enemy"
+		]
+	},
+	"exordian_avenger:silence":
+	{
+		"NAME": "Silence",
+		"DESCRIPTIONS":[
+			"The next Buff is negated",
+			"The next ",
+			" Buffs are negated"
+		]
+	},
+	"exordian_avenger:actcute":
+	{
+		"NAME": "Acting cute",
+		"DESCRIPTIONS":[
+			"Whenever you play an attack, taunt"
+		]
+	},
+	"exordian_avenger:thirdhandPower":
+	{
+		"NAME": "Third Hand",
+		"DESCRIPTIONS":[
+			"Increase your hand size by "
+		]
+	}
+}
